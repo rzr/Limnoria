@@ -35,7 +35,11 @@ can store many quotes per person and display their most recent quote, as well
 as see who "grabbed" the quote in the first place.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

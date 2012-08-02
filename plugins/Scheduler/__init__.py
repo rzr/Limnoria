@@ -32,7 +32,11 @@ Gives the user the ability to schedule commands to run at a particular time,
 or repeatedly run at a particular interval.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

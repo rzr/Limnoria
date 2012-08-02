@@ -32,7 +32,11 @@ The Todo plugin allows registered users to keep their own personal list of
 tasks to do, with an optional priority for each.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

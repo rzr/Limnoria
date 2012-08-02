@@ -32,7 +32,11 @@ The Success plugin spices up success replies just like Dunno spices up
 "no such command" replies.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

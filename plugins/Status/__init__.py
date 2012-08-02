@@ -32,7 +32,11 @@ A simple module to handle various informational commands querying the bot's
 current status and statistics.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

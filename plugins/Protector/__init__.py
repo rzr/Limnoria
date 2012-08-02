@@ -32,7 +32,11 @@ Defends a channel against actions by people who don't have the proper
 capabilities.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

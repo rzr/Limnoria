@@ -32,7 +32,11 @@ Basic channel management commands.  Many of these commands require their caller
 to have the #channel,op capability.  This plugin is loaded by default.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

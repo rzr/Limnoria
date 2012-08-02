@@ -32,7 +32,11 @@ Handles standard CTCP responses to PING, TIME, SOURCE, VERSION, USERINFO,
 and FINGER.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 __version__ = "%%VERSION%%"

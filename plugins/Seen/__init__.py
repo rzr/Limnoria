@@ -31,7 +31,11 @@
 Keeps track of the last time a user was seen on a channel.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

@@ -33,7 +33,11 @@ according to their capabilities.  If you want your bot automatically op users
 when they join your channel, this is the plugin to load.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

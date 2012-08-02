@@ -32,7 +32,11 @@ Greets users who join the channel with a recognized hostmask with a nice
 little greeting.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

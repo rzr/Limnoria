@@ -32,7 +32,11 @@ Includes commands for connecting, disconnecting, and reconnecting to multiple
 networks, as well as several other utility functions related to IRC networks.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

@@ -33,7 +33,11 @@ searching for URLs and returning random URLs.  Also provides statistics on the
 URLs in the database.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

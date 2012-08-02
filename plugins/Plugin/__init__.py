@@ -33,7 +33,11 @@ a plugin, getting a list of the loaded plugins, and searching and downloading
 plugins from supybot.com.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

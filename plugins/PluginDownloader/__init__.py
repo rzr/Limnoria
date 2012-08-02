@@ -33,7 +33,11 @@ Add a description of the plugin (to be presented to the user inside the wizard)
 here.  This should describe *what* the plugin does.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

@@ -33,7 +33,11 @@ MessageParser can be configured to run commands when a message matches a
 given trigger.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

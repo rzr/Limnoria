@@ -31,7 +31,11 @@
 Commands that use the dictd protocol to define word.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

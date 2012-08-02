@@ -32,7 +32,11 @@ A module to allow each channel to have "news".  News items may have expiration
 dates.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

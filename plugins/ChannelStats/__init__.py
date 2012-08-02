@@ -33,7 +33,11 @@ concerning joins, parts, and various other commands in addition to tracking
 statistics about smileys, actions, characters, and words.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

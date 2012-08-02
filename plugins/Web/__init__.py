@@ -31,7 +31,11 @@
 Includes various web-related commands.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 __version__ = "%%VERSION%%"

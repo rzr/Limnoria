@@ -31,7 +31,11 @@
 Hand out praise to IRC denizens with this plugin.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

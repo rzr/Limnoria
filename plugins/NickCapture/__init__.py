@@ -32,7 +32,11 @@ This module attempts to capture the bot's nick, watching for an opportunity to
 switch to that nick.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

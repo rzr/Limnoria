@@ -32,7 +32,11 @@ A complete messaging system that allows users to leave 'notes' for other
 users that can be retrieved later.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

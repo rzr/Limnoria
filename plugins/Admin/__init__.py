@@ -32,7 +32,11 @@ These are commands useful for administrating the bot; they all require their
 caller to have the 'admin' capability.  This plugin is loaded by default.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 __author__ = supybot.authors.jemfinch

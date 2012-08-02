@@ -31,7 +31,11 @@
 Provides commands useful to users in general. This plugin is loaded by default.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

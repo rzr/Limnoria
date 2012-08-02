@@ -32,7 +32,11 @@ Provides numerous filters, and a command (outfilter) to set them as filters on
 the output of the bot.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

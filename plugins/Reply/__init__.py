@@ -32,7 +32,11 @@ This plugin contains various commands which elicit certain types of responses
 from the bot.  
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword

@@ -33,7 +33,11 @@ with random 'I dunno'-like responses.  If you want something spicier than
 '<x> is not a valid command'-like responses, use this plugin.
 """
 
+from imp import reload
+
 import supybot
+from imp import reload
+
 import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
