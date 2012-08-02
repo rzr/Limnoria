@@ -40,7 +40,7 @@ from . import crypt
 def contents(filename):
     return file(filename).read()
 
-def open(filename, mode='wb', *args, **kwargs):
+def open_mkdir(filename, mode='wb', *args, **kwargs):
     """filename -> file object.
 
     Returns a file object for filename, creating as many directories as may be
@@ -49,10 +49,12 @@ def open(filename, mode='wb', *args, **kwargs):
     baz in it.
     """
     if mode not in ('w', 'wb'):
-        raise ValueError('utils.file.open expects to write.')
+        raise ValueError('utils.file.open_mkdir expects to write.')
     (dirname, basename) = os.path.split(filename)
+    if os.path.isdir(dirname):
+        shutil.rmtree(dirname)
     os.makedirs(dirname)
-    return file(filename, mode, *args, **kwargs)
+    return open(filename, mode, *args, **kwargs)
 
 def copy(src, dst):
     """src, dst -> None
@@ -82,7 +84,7 @@ def touch(filename):
 def mktemp(suffix=''):
     """Gives a decent random string, suitable for a filename."""
     r = random.Random()
-    m = crypt.md5(suffix)
+    m = crypt.md5(suffix.encode('utf8'))
     r.seed(time.time())
     s = str(r.getstate())
     period = random.random()
@@ -94,7 +96,7 @@ def mktemp(suffix=''):
         m.update(s)
         m.update(str(now))
         s = m.hexdigest()
-    return crypt.sha(s + str(time.time())).hexdigest() + suffix
+    return crypt.sha((s + str(time.time())).encode('utf8')).hexdigest()+suffix
 
 def nonCommentLines(fd):
     for line in fd:
@@ -102,7 +104,7 @@ def nonCommentLines(fd):
             yield line
 
 def nonEmptyLines(fd):
-    return filter(str.strip, fd)
+    return filter(lambda x:(x not in ('\n', '\'\n')), fd)
 
 def nonCommentNonEmptyLines(fd):
     return nonEmptyLines(nonCommentLines(fd))
@@ -114,9 +116,10 @@ def chunks(fd, size):
 ##         yield chunk
 ##         chunk = fd.read(size)
 
-class AtomicFile(io.TextIOWrapper):
+class AtomicFile:
     """Used for files that need to be atomically written -- i.e., if there's a
     failure, the original file remains, unmodified.  mode must be 'w' or 'wb'"""
+
     class default(object): # Holder for values.
         # Callables?
         tmpDir = None
@@ -151,18 +154,25 @@ class AtomicFile(io.TextIOWrapper):
             self.tempFilename = os.path.join(tmpDir, tempFilename)
         # This doesn't work because of the uncollectable garbage effect.
         # self.__parent = super(AtomicFile, self)
-        super(AtomicFile, self).__init__(self.tempFilename, mode)
+        self._fd = open(self.tempFilename, mode)
 
     def rollback(self):
         if not self.closed:
-            super(AtomicFile, self).close()
+            self._fd.close()
             if os.path.exists(self.tempFilename):
                 os.remove(self.tempFilename)
             self.rolledback = True
 
+    def write(self, s):
+        return self._fd.write(s)
+
+    @property
+    def closed(self):
+        return self._fd.closed
+
     def close(self):
         if not self.rolledback:
-            super(AtomicFile, self).close()
+            self._fd.close()
             # We don't mind writing an empty file if the file we're overwriting
             # doesn't exist.
             newSize = os.path.getsize(self.tempFilename)
@@ -189,7 +199,7 @@ class AtomicFile(io.TextIOWrapper):
                 # rename a file (and shutil.move will use os.rename if
                 # possible), we first check if we have the write permission
                 # and only then do we write.
-                fd = file(self.filename, 'a')
+                fd = open(self.filename, 'a')
                 fd.close()
                 shutil.move(self.tempFilename, self.filename)
 

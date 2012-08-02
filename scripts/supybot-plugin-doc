@@ -62,7 +62,7 @@ except EnvironmentError as e:
     error('Unable to open %s for writing.' % registryFilename)
 
 import supybot.registry as registry
-registry.open(registryFilename)
+registry.open_registry(registryFilename)
 
 import supybot.log as log
 import supybot.conf as conf

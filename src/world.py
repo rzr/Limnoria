@@ -113,7 +113,10 @@ def debugFlush(s=''):
 
 def upkeep():
     """Does upkeep (like flushing, garbage collection, etc.)"""
-    sys.exc_clear() # Just in case, let's clear the exception info.
+    try:
+        sys.exc_clear() # Just in case, let's clear the exception info.
+    except AttributeError: # Python 3
+        pass # In Python 3, except clears the exception
     if os.name == 'nt':
         try:
             import msvcrt
@@ -153,7 +156,6 @@ def upkeep():
         #if registryFilename is not None:
         #    registry.open(registryFilename)
     if not dying:
-        log.debug('Regexp cache size: %s', len(sre._cache))
         log.debug('Pattern cache size: %s', len(ircutils._patternCache))
         log.debug('HostmaskPatternEqual cache size: %s',
                   len(ircutils._hostmaskPatternEqualCache))

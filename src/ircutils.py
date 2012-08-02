@@ -36,6 +36,7 @@ work in an IRC-case-insensitive fashion), and numerous other things.
 """
 
 import re
+import sys
 import time
 import random
 import string
@@ -91,7 +92,7 @@ def joinHostmask(nick, ident, host):
     assert nick and ident and host
     return sys.intern('%s!%s@%s' % (nick, ident, host))
 
-_rfc1459trans = string.maketrans(string.ascii_uppercase + r'\[]~',
+_rfc1459trans = str.maketrans(string.ascii_uppercase + r'\[]~',
                                  string.ascii_lowercase + r'|{}^')
 def toLower(s, casemapping=None):
     """s => s
@@ -453,13 +454,13 @@ def wrap(s, length, break_on_hyphens = False, break_long_words = False):
 
 def isValidArgument(s):
     """Returns whether s is strictly a valid argument for an IRC message."""
-    return '\r' not in s and '\n' not in s and '\x00' not in s
+    return '\r' not in s and \
+            '\n' not in s and \
+            '\x00' not in s
 
 def safeArgument(s):
     """If s is unsafe for IRC, returns a safe version."""
-    if isinstance(s, str):
-        s = s.encode('utf-8')
-    elif not isinstance(s, str):
+    if not isinstance(s, str):
         debug('Got a non-string in safeArgument: %r', s)
         s = str(s)
     if isValidArgument(s):

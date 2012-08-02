@@ -151,14 +151,14 @@ def canonicalName(command):
     Currently, this makes everything lowercase and removes all dashes and
     underscores.
     """
-    if isinstance(command, str):
-        command = command.encode('utf-8')
+    if isinstance(command, bytes):
+        command = command.decode('utf-8')
     special = '\t -_'
     reAppend = ''
     while command and command[-1] in special:
         reAppend = command[-1] + reAppend
         command = command[:-1]
-    return command.translate(utils.str.chars, special).lower() + reAppend
+    return ''.join([x for x in command if x not in special]).lower() + reAppend
 
 def reply(msg, s, prefixNick=None, private=None,
           notice=None, to=None, action=None, error=False):
@@ -262,10 +262,11 @@ class Tokenizer(object):
     #
     # These are the characters valid in a token.  Everything printable except
     # double-quote, left-bracket, and right-bracket.
-    validChars = utils.str.chars.translate(utils.str.chars, '\x00\r\n \t')
+    validChars=[x for x in utils.str.chars if x not in '\x00\r\n \t']
     def __init__(self, brackets='', pipe=False, quotes='"'):
         if brackets:
-            self.validChars=self.validChars.translate(utils.str.chars, brackets)
+            self.validChars = ''.join([x for x in self.validChars
+                    if x not in brackets])
             self.left = brackets[0]
             self.right = brackets[1]
         else:
@@ -273,9 +274,9 @@ class Tokenizer(object):
             self.right = ''
         self.pipe = pipe
         if self.pipe:
-            self.validChars = self.validChars.translate(utils.str.chars, '|')
+            self.validChars = ''.join([x for x in self.validChars if x != '|'])
         self.quotes = quotes
-        self.validChars = self.validChars.translate(utils.str.chars, quotes)
+        self.validChars = [x for x in self.validChars if x not in quotes]
 
 
     def _handleToken(self, token):

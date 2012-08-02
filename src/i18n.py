@@ -166,6 +166,7 @@ class _PluginInternationalization:
         self.translations = {}
         for line in translationFile:
             line = line[0:-1] # Remove the ending \n
+            line = line.decode('utf8')
 
             if line.startswith(MSGID):
                 # Don't check if step is WAITING_FOR_MSGID
@@ -317,9 +318,12 @@ class internationalizedFunction:
     def __init__(self, internationalizer, name, function):
         self._internationalizer = internationalizer
         self._name = name
-        self.__call__ = function
         self._origin = function
         internationalizedFunctions.append(self)
+
+    def __call__(self, *args, **kwargs):
+        return self._origin(*args, **kwargs)
+
     def loadLocale(self):
         self.__call__ = self._internationalizer.localizeFunction(self._name)
         if self.__call__ == None:

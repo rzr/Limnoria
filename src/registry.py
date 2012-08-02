@@ -31,6 +31,7 @@
 import re
 import os
 import time
+import codecs
 import string
 import textwrap
 
@@ -57,17 +58,17 @@ class InvalidRegistryName(RegistryException):
 class InvalidRegistryValue(RegistryException):
     pass
 
-class NonExistentRegistryEntry(RegistryException):
+class NonExistentRegistryEntry(RegistryException, AttributeError):
     pass
 
 _cache = utils.InsensitivePreservingDict()
 _lastModified = 0
-def open(filename, clear=False):
+def open_registry(filename, clear=False):
     """Initializes the module by loading the registry file into memory."""
     global _lastModified
     if clear:
         _cache.clear()
-    _fd = file(filename)
+    _fd = open(filename, encoding='unicode_escape')
     fd = utils.file.nonCommentNonEmptyLines(_fd)
     acc = ''
     slashEnd = re.compile(r'\\*$')
@@ -87,9 +88,11 @@ def open(filename, clear=False):
         else:
             acc += line
         try:
+            #print(repr(acc))
             (key, value) = re.split(r'(?<!\\):', acc, 1)
             key = key.strip()
-            value = value.strip().decode('string_escape')
+            value = value[1:]
+            #value = codecs.getdecoder('unicode_escape')(value)[0]
             acc = ''
         except ValueError:
             raise InvalidRegistryFile('Error unpacking line %r' % acc)
@@ -104,8 +107,7 @@ def close(registry, filename, private=True):
         help = value.help()
         if help:
             lines = textwrap.wrap(value._help)
-            for (i, line) in enumerate(lines):
-                lines[i] = '# %s\n' % line
+            lines = ['# %s\n' % line for line in lines]
             lines.insert(0, '###\n')
             if first:
                 first = False
@@ -125,7 +127,16 @@ def close(registry, filename, private=True):
                         exception('Exception printing default value of %s:' %
                                   value._name)
             lines.append('###\n')
-            fd.writelines(lines)
+            #fd.writelines(lines)
+            for line in lines:
+                try:
+                    fd.write(''.join([str(x) for x in line]))
+                except Exception as e:
+                    print(dir(fd))
+                    print(repr(line))
+                    print(repr(type(line)))
+                    print(repr(line.__class__))
+                    raise e
         if hasattr(value, 'value'): # This lets us print help for non-values.
             try:
                 if private or not value._private:
@@ -145,7 +156,7 @@ def isValidRegistryName(name):
     return len(name.split()) == 1 and not name.startswith('_')
 
 def escape(name):
-    name = name.encode('string_escape')
+    name = str(codecs.getencoder('unicode_escape')(name)[0])
     name = name.replace(':', '\\:')
     name = name.replace('.', '\\.')
     return name
@@ -153,7 +164,7 @@ def escape(name):
 def unescape(name):
     name = name.replace('\\.', '.')
     name = name.replace('\\:', ':')
-    name = name.decode('string_escape')
+    name = codecs.getdecoder('unicode_escape')(name)[0]
     return name
 
 _splitRe = re.compile(r'(?<!\\)\.')
@@ -161,7 +172,7 @@ def split(name):
     return list(map(unescape, _splitRe.split(name)))
 
 def join(names):
-    return '.'.join(map(escape, names))
+    return '.'.join(names)
 
 class Group(object):
     """A group; it doesn't hold a value unless handled by a subclass."""
@@ -364,7 +375,7 @@ class Value(Group):
         return repr(self())
 
     def serialize(self):
-        return str(self).encode('string_escape')
+        return str(self)
 
     # We tried many, *many* different syntactic methods here, and this one was
     # simply the best -- not very intrusive, easily overridden by subclasses,
@@ -463,7 +474,7 @@ class String(Value):
 
     _printable = string.printable[:-4]
     def _needsQuoting(self, s):
-        return s.translate(utils.str.chars, self._printable) and s.strip() != s
+        return any([x not in self._printable for x in s]) and s.strip() != s
 
     def __str__(self):
         s = self.value

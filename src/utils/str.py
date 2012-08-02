@@ -46,7 +46,7 @@ import collections
 internationalizeFunction=PluginInternationalization().internationalizeFunction
 
 from types import MethodType as curry
-chars = str.maketrans('', '')
+chars = ('abcdfeghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_')
 
 def rsplit(s, sep=None, maxsplit=-1):
     """Equivalent to str.split, except splitting from the right."""

@@ -146,7 +146,7 @@ def saltHash(password, salt=None, hash='sha'):
         hasher = crypt.sha
     elif hash == 'md5':
         hasher = crypt.md5
-    return '|'.join([salt, hasher(salt + password).hexdigest()])
+    return '|'.join([salt, hasher((salt + password).encode('utf8')).hexdigest()])
 
 def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
     """Evaluates s, safely.  Useful for turning strings into tuples/lists/etc.
@@ -155,18 +155,22 @@ def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
         node = ast.parse(s)
     except SyntaxError as e:
         raise ValueError('Invalid string: %s.' % e)
-    nodes = ast.parse(s).node.nodes
+    nodes = ast.parse(s).body
     if not nodes:
         if node.__class__ is ast.Module:
             return node.doc
         else:
             raise ValueError(format('Unsafe string: %q', s))
     node = nodes[0]
-    if node.__class__ is not ast.Discard:
-        raise ValueError(format('Invalid expression: %q', s))
-    node = node.getChildNodes()[0]
+    #if node.__class__ is not ast.Discard:
+    #    raise ValueError(format('Invalid expression: %q', s))
+    #node = node.getChildNodes()[0]
     def checkNode(node):
-        if node.__class__ is ast.Const:
+        if node.__class__ is ast.Expr:
+            node = node.value
+        if node.__class__ in (ast.Num,
+                              ast.Str,
+                              ast.Bytes):
             return True
         if node.__class__ in (ast.List,
                               ast.Tuple,
@@ -208,13 +212,13 @@ class IterableMap(object):
             yield value
 
     def items(self):
-        return list(self.items())
+        return list(self.iteritems())
 
     def keys(self):
-        return list(self.keys())
+        return list(self.iterkeys())
 
     def values(self):
-        return list(self.values())
+        return list(self.itervalues())
 
     def __len__(self):
         ret = 0
@@ -228,7 +232,7 @@ class IterableMap(object):
         return False
 
 
-class InsensitivePreservingDict(collections.Mapping):
+class InsensitivePreservingDict(collections.MutableMapping):
     def key(self, s):
         """Override this if you wish."""
         if s is not None:
@@ -263,10 +267,10 @@ class InsensitivePreservingDict(collections.Mapping):
         del self.data[self.key(k)]
 
     def __len__(self):
-        return self.data.__len__()
+        return len(self.data)
 
     def __iter__(self):
-        return self.data.__iter__()
+        return iter(self.data)
 
     def iteritems(self):
         return iter(self.data.values())

@@ -47,7 +47,6 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 from supybot import commands
 
-from supybot.utils.iter import ifilter
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Misc')
 

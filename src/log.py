@@ -65,7 +65,9 @@ class Formatter(logging.Formatter):
         return logging.Formatter.formatException(self, (E, e, tb))
 
     def format(self, record):
+        # FIXME: Don't use protected attributes.
         self._fmt = self._fmtConf()
+        self._style._fmt = self._fmtConf()
         return logging.Formatter.format(self, record)
 
 

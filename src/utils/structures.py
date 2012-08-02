@@ -443,6 +443,9 @@ class CacheDict(collections.MutableMapping):
     def iteritems(self):
         return iter(self.d.items())
 
+    def __len__(self):
+        return len(self.d)
+
     def __iter__(self):
         return iter(self.d)
 

@@ -42,7 +42,6 @@ import supybot.world as world
 import supybot.ircutils as ircutils
 import supybot.registry as registry
 import supybot.unpreserve as unpreserve
-from .utils.iter import imap, ilen, ifilter
 import collections
 
 def isCapability(capability):
@@ -111,7 +110,7 @@ def canonicalCapability(capability):
     return capability.lower()
 
 def unWildcardHostmask(hostmask):
-    return hostmask.translate(utils.str.chars, '!@*?')
+    return [x for x in hostmask if x not in '!@*?']
 
 _invert = invertCapability
 class CapabilitySet(set):
@@ -608,7 +607,8 @@ class UsersDictionary(utils.IterableMap):
             if self.filename is not None:
                 L = list(self.users.items())
                 L.sort()
-                fd = utils.file.AtomicFile(self.filename)
+                #fd = utils.file.AtomicFile(self.filename)
+                fd = open(self.filename, 'w')
                 for (id, u) in L:
                     fd.write('user %s' % id)
                     fd.write(os.linesep)
@@ -844,7 +844,7 @@ class IgnoresDB(object):
 
     def open(self, filename):
         self.filename = filename
-        fd = file(self.filename)
+        fd = open(self.filename)
         for line in utils.file.nonCommentNonEmptyLines(fd):
             try:
                 line = line.rstrip('\r\n')

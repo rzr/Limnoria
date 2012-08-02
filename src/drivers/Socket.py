@@ -52,7 +52,6 @@ import supybot.utils as utils
 import supybot.world as world
 import supybot.drivers as drivers
 import supybot.schedule as schedule
-from supybot.utils.iter import imap
 
 class SocketDriver(drivers.IrcDriver, drivers.ServersMixin):
     def __init__(self, irc):
@@ -62,7 +61,7 @@ class SocketDriver(drivers.IrcDriver, drivers.ServersMixin):
         self.conn = None
         self.servers = ()
         self.eagains = 0
-        self.inbuffer = ''
+        self.inbuffer = b''
         self.outbuffer = ''
         self.zombie = False
         self.connected = False
@@ -117,7 +116,7 @@ class SocketDriver(drivers.IrcDriver, drivers.ServersMixin):
             self.outbuffer += ''.join(map(str, msgs))
         if self.outbuffer:
             try:
-                sent = self.conn.send(self.outbuffer)
+                sent = self.conn.send(self.outbuffer.encode('utf8'))
                 self.outbuffer = self.outbuffer[sent:]
                 self.eagains = 0
             except socket.error as e:
@@ -140,10 +139,10 @@ class SocketDriver(drivers.IrcDriver, drivers.ServersMixin):
         try:
             self.inbuffer += self.conn.recv(1024)
             self.eagains = 0 # If we successfully recv'ed, we can reset this.
-            lines = self.inbuffer.split('\n')
+            lines = self.inbuffer.split(b'\n')
             self.inbuffer = lines.pop()
             for line in lines:
-                msg = drivers.parseMsg(line)
+                msg = drivers.parseMsg(line.decode('utf8', 'replace'))
                 if msg is not None:
                     self.irc.feedMsg(msg)
         except socket.timeout:
