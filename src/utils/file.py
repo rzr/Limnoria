@@ -28,13 +28,12 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
+import io
 import os
 import time
 import random
 import shutil
 import os.path
-
-from .iter import ifilter
 
 from . import crypt
 
@@ -115,7 +114,7 @@ def chunks(fd, size):
 ##         yield chunk
 ##         chunk = fd.read(size)
 
-class AtomicFile(file):
+class AtomicFile(io.TextIOWrapper):
     """Used for files that need to be atomically written -- i.e., if there's a
     failure, the original file remains, unmodified.  mode must be 'w' or 'wb'"""
     class default(object): # Holder for values.

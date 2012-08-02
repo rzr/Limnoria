@@ -34,7 +34,6 @@ Simple utility functions related to strings.
 """
 
 import re
-import new
 import sys
 import string
 import textwrap
@@ -46,8 +45,8 @@ from supybot.i18n import PluginInternationalization
 import collections
 internationalizeFunction=PluginInternationalization().internationalizeFunction
 
-curry = new.instancemethod
-chars = string.maketrans('', '')
+from types import MethodType as curry
+chars = str.maketrans('', '')
 
 def rsplit(s, sep=None, maxsplit=-1):
     """Equivalent to str.split, except splitting from the right."""
@@ -97,9 +96,9 @@ def distance(s, t):
             d[i][j] = min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+cost)
     return d[n][m]
 
-_soundextrans = string.maketrans(string.ascii_uppercase,
+_soundextrans = str.maketrans(string.ascii_uppercase,
                                  '01230120022455012623010202')
-_notUpper = chars.translate(chars, string.ascii_uppercase)
+_notUpper = string.ascii_uppercase.translate(chars)
 def soundex(s, length=4):
     """Returns the soundex hash of a given string."""
     s = s.upper() # Make everything uppercase.
@@ -196,7 +195,7 @@ def perlReToReplacer(s):
         flags = list(filter('g'.__ne__, flags))
     r = perlReToPythonRe(sep.join(('', regexp, flags)))
     if g:
-        return curry(r.sub, replace)
+        curry(r.sub, replace)
     else:
         return lambda s: r.sub(replace, s, 1)
 

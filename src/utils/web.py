@@ -33,8 +33,8 @@ import socket
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import http.client
-import sgmllib
 import urllib.parse
+import html.parser
 import html.entities
 
 sockerrors = (socket.error,)
@@ -150,7 +150,7 @@ def getUrl(url, size=None, headers=None, data=None):
 def getDomain(url):
     return urllib.parse.urlparse(url)[1]
 
-class HtmlToText(sgmllib.SGMLParser):
+class HtmlToText(html.parser.HTMLParser):
     """Taken from some eff-bot code on c.l.p."""
     entitydefs = html.entities.entitydefs.copy()
     entitydefs['nbsp'] = ' '
@@ -159,10 +159,10 @@ class HtmlToText(sgmllib.SGMLParser):
         self.tagReplace = tagReplace
         sgmllib.SGMLParser.__init__(self)
 
-    def unknown_starttag(self, tag, attr):
+    def handle_starttag(self, tag, attr):
         self.data.append(self.tagReplace)
 
-    def unknown_endtag(self, tag):
+    def handle_endtag(self, tag):
         self.data.append(self.tagReplace)
 
     def handle_data(self, data):

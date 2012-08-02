@@ -30,17 +30,16 @@
 
 import os
 import sys
-import new
+import ast
 import time
 import types
-import compiler
 import textwrap
-import UserDict
 import traceback
+import collections
 
 from .str import format
 from .file import mktemp
-from .iter import imap, all
+from .iter import all
 
 from . import crypt
 
@@ -153,27 +152,27 @@ def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
     """Evaluates s, safely.  Useful for turning strings into tuples/lists/etc.
     without unsafely using eval()."""
     try:
-        node = compiler.parse(s)
+        node = ast.parse(s)
     except SyntaxError as e:
         raise ValueError('Invalid string: %s.' % e)
-    nodes = compiler.parse(s).node.nodes
+    nodes = ast.parse(s).node.nodes
     if not nodes:
-        if node.__class__ is compiler.ast.Module:
+        if node.__class__ is ast.Module:
             return node.doc
         else:
             raise ValueError(format('Unsafe string: %q', s))
     node = nodes[0]
-    if node.__class__ is not compiler.ast.Discard:
+    if node.__class__ is not ast.Discard:
         raise ValueError(format('Invalid expression: %q', s))
     node = node.getChildNodes()[0]
     def checkNode(node):
-        if node.__class__ is compiler.ast.Const:
+        if node.__class__ is ast.Const:
             return True
-        if node.__class__ in (compiler.ast.List,
-                              compiler.ast.Tuple,
-                              compiler.ast.Dict):
+        if node.__class__ in (ast.List,
+                              ast.Tuple,
+                              ast.Dict):
             return all(checkNode, node.getChildNodes())
-        if node.__class__ is compiler.ast.Name:
+        if node.__class__ is ast.Name:
             if node.name in namespace:
                 return True
             else:
@@ -229,7 +228,7 @@ class IterableMap(object):
         return False
 
 
-class InsensitivePreservingDict(UserDict.DictMixin, object):
+class InsensitivePreservingDict(collections.Mapping):
     def key(self, s):
         """Override this if you wish."""
         if s is not None:
@@ -262,6 +261,12 @@ class InsensitivePreservingDict(UserDict.DictMixin, object):
 
     def __delitem__(self, k):
         del self.data[self.key(k)]
+
+    def __len__(self):
+        return self.data.__len__()
+
+    def __iter__(self):
+        return self.data.__iter__()
 
     def iteritems(self):
         return iter(self.data.values())

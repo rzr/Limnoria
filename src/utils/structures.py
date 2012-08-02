@@ -33,7 +33,6 @@ Data structures for Python.
 
 import time
 import types
-import UserDict
 import collections
 
 
@@ -422,7 +421,7 @@ class MultiSet(object):
         return elt in self.d
 
 
-class CacheDict(UserDict.DictMixin):
+class CacheDict(collections.MutableMapping):
     def __init__(self, max, **kwargs):
         self.d = dict(**kwargs)
         self.max = max

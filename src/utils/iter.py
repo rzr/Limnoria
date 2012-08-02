@@ -30,7 +30,6 @@
 
 
 import sys
-import new
 import random
 
 from itertools import *
@@ -99,13 +98,11 @@ def choice(iterable):
         return random.choice(iterable)
     else:
         n = 1
-        m = new.module('') # Guaranteed unique value.
-        ret = m
         for x in iterable:
             if random.random() < 1/n:
                 ret = x
             n += 1
-        if ret is m:
+        if 'ret' not in locals():
             raise IndexError
         return ret
 
