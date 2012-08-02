@@ -35,9 +35,9 @@ import os
 import shutil
 import os.path
 
-import error
-import python
-import file as File
+from . import error
+from . import python
+from . import file as File
 
 # 'txn' is used as an abbreviation for 'transaction' in the following source.
 
@@ -108,7 +108,7 @@ class Transaction(TransactionMixin):
             raise FailedAcquisition(self.txnDir)
         try:
             os.rename(self.txnDir, self.dir)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             raise FailedAcquisition(self.txnDir, e)
         os.mkdir(self.dirize(self.ORIGINALS))
         os.mkdir(self.dirize(self.REPLACEMENTS))

@@ -38,7 +38,7 @@ import getopt
 import inspect
 import threading
 import multiprocessing #python2.6 or later!
-import Queue
+import queue
 
 import supybot.log as log
 import supybot.conf as conf
@@ -49,6 +49,7 @@ import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
+import collections
 _ = PluginInternationalization()
 
 
@@ -69,7 +70,7 @@ def thread(f):
             t.start()
         else:
             f(self, irc, msg, args, *L, **kwargs)
-    return utils.python.changeFunctionName(newf, f.func_name, f.__doc__)
+    return utils.python.changeFunctionName(newf, f.__name__, f.__doc__)
 
 class ProcessTimeoutError(Exception):
     """Gets raised when a process is killed due to timeout."""
@@ -99,10 +100,10 @@ def process(f, *args, **kwargs):
     p.join(timeout)
     if p.is_alive():
         p.terminate()
-        raise ProcessTimeoutError, "%s aborted due to timeout." % (p.name,)
+        raise ProcessTimeoutError("%s aborted due to timeout." % (p.name,))
     try:
         v = q.get(block=False)
-    except Queue.Empty:
+    except queue.Empty:
         v = "Nothing returned."
     if isinstance(v, Exception):
         v = "Error: " + str(v)
@@ -137,7 +138,7 @@ class UrlSnarfThread(world.SupyThread):
     def run(self):
         try:
             super(UrlSnarfThread, self).run()
-        except utils.web.Error, e:
+        except utils.web.Error as e:
             log.debug('Exception in urlSnarfer: %s', utils.exnToString(e))
 
 class SnarfQueue(ircutils.FloodQueue):
@@ -196,7 +197,7 @@ def urlSnarfer(f):
             L = list(L)
             t = UrlSnarfThread(target=doSnarf, url=url)
             t.start()
-    newf = utils.python.changeFunctionName(newf, f.func_name, f.__doc__)
+    newf = utils.python.changeFunctionName(newf, f.__name__, f.__doc__)
     return newf
 
 
@@ -245,7 +246,7 @@ def getNonInt(irc, msg, args, state, type=_('non-integer value')):
 
 def getLong(irc, msg, args, state, type='long'):
     getInt(irc, msg, args, state, type)
-    state.args[-1] = long(state.args[-1])
+    state.args[-1] = int(state.args[-1])
 
 def getFloat(irc, msg, args, state, type=_('floating point number')):
     try:
@@ -275,7 +276,7 @@ def getId(irc, msg, args, state, kind=None):
     try:
         args[0] = args[0].lstrip('#')
         getInt(irc, msg, args, state, type=type)
-    except Exception, e:
+    except Exception as e:
         args[0] = original
         raise
 
@@ -632,7 +633,7 @@ def getMatch(irc, msg, args, state, regexp, errmsg):
 
 def getLiteral(irc, msg, args, state, literals, errmsg=None):
     # ??? Should we allow abbreviations?
-    if isinstance(literals, basestring):
+    if isinstance(literals, str):
         literals = (literals,)
     abbrevs = utils.abbrev(literals)
     if args[0] in abbrevs:
@@ -742,8 +743,8 @@ class UnknownConverter(KeyError):
 def getConverter(name):
     try:
         return wrappers[name]
-    except KeyError, e:
-        raise UnknownConverter, str(e)
+    except KeyError as e:
+        raise UnknownConverter(str(e))
 
 def callConverter(name, irc, msg, args, state, *L):
     getConverter(name)(irc, msg, args, state, *L)
@@ -759,7 +760,7 @@ def contextify(spec):
     return spec
 
 def setDefault(state, default):
-    if callable(default):
+    if isinstance(default, collections.Callable):
         state.args.append(default())
     else:
         state.args.append(default)
@@ -774,7 +775,7 @@ class context(object):
             self.converter = getConverter(spec[0])
         elif spec is None:
             self.converter = getConverter('anything')
-        elif isinstance(spec, basestring):
+        elif isinstance(spec, str):
             self.args = ()
             self.converter = getConverter(spec)
         else:
@@ -796,7 +797,7 @@ class rest(context):
             args[:] = [' '.join(args)]
             try:
                 super(rest, self).__call__(irc, msg, args, state)
-            except Exception, e:
+            except Exception as e:
                 args[:] = original
         else:
             raise IndexError
@@ -822,7 +823,7 @@ class optional(additional):
     def __call__(self, irc, msg, args, state):
         try:
             super(optional, self).__call__(irc, msg, args, state)
-        except (callbacks.ArgumentError, callbacks.Error), e:
+        except (callbacks.ArgumentError, callbacks.Error) as e:
             log.debug('Got %s, returning default.', utils.exnToString(e))
             state.errored = False
             setDefault(state, self.default)
@@ -840,7 +841,7 @@ class any(context):
                 self.__parent.__call__(irc, msg, args, st)
         except IndexError:
             pass
-        except (callbacks.ArgumentError, callbacks.Error), e:
+        except (callbacks.ArgumentError, callbacks.Error) as e:
             if not self.continueOnError:
                 raise
             else:
@@ -861,7 +862,7 @@ class first(context):
             self.default = kw.pop('default')
             assert not kw, 'Bad kwargs for first.__init__'
         self.spec = specs # for __repr__
-        self.specs = map(contextify, specs)
+        self.specs = list(map(contextify, specs))
 
     def __call__(self, irc, msg, args, state):
         errored = False
@@ -869,7 +870,7 @@ class first(context):
             try:
                 spec(irc, msg, args, state)
                 return
-            except Exception, e:
+            except Exception as e:
                 errored = state.errored
                 state.errored = False
                 continue
@@ -899,7 +900,7 @@ class commalist(context):
                     if part: # trailing commas
                         super(commalist, self).__call__(irc, msg, [part], st)
             state.args.append(st.args)
-        except Exception, e:
+        except Exception as e:
             args[:] = original
             raise
 
@@ -910,7 +911,7 @@ class getopts(context):
         self.spec = getopts # for repr
         self.getopts = {}
         self.getoptL = []
-        for (name, spec) in getopts.iteritems():
+        for (name, spec) in getopts.items():
             if spec == '':
                 self.getoptL.append(name)
                 self.getopts[name] = None
@@ -957,11 +958,11 @@ class State(object):
             self.errored = True
             return getattr(dynamic.irc, attr)
         else:
-            raise AttributeError, attr
+            raise AttributeError(attr)
 
     def essence(self):
         st = State(self.types)
-        for (attr, value) in self.__dict__.iteritems():
+        for (attr, value) in self.__dict__.items():
             if attr not in ('args', 'kwargs'):
                 setattr(st, attr, value)
         return st
@@ -1001,7 +1002,7 @@ class Spec(object):
         return state
 
 def wrap(f, specList=[], name=None, **kw):
-    name = name or f.func_name
+    name = name or f.__name__
     spec = Spec(specList, **kw)
     def newf(self, irc, msg, args, **kwargs):
         state = spec(irc, msg, args, stateAttrs={'cb': self, 'log': self.log})
@@ -1014,7 +1015,7 @@ def wrap(f, specList=[], name=None, **kw):
             except TypeError:
                 self.log.error('Spec: %s', specList)
                 self.log.error('Received args: %s', args)
-                code = f.func_code
+                code = f.__code__
                 funcArgs = inspect.getargs(code)[0][len(self.commandArgs):]
                 self.log.error('Extra args: %s', funcArgs)
                 self.log.debug('Make sure you did not wrap a wrapped '

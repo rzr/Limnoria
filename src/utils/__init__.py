@@ -34,7 +34,8 @@ import sys
 # csv.{join,split} -- useful functions that should exist.
 ###
 import csv
-import cStringIO as StringIO
+import io as StringIO
+import collections
 def join(L):
     fd = StringIO.StringIO()
     writer = csv.writer(fd)
@@ -44,13 +45,13 @@ def join(L):
 def split(s):
     fd = StringIO.StringIO(s)
     reader = csv.reader(fd)
-    return reader.next()
+    return next(reader)
 csv.join = join
 csv.split = split
 
 # We use this often enough that we're going to stick it in builtins.
 def force(x):
-    if callable(x):
+    if isinstance(x, collections.Callable):
         return x()
     else:
         return x
@@ -59,7 +60,7 @@ def force(x):
 if sys.version_info < (2, 4, 0):
     def reversed(L):
         """Iterates through a sequence in reverse."""
-        for i in xrange(len(L) - 1, -1, -1):
+        for i in range(len(L) - 1, -1, -1):
             yield L[i]
     (__builtins__ if isinstance(__builtins__, dict) else __builtins__.__dict__)['reversed'] = reversed
 
@@ -96,16 +97,16 @@ if sys.version_info < (2, 4, 0):
 
 # These imports need to happen below the block above, so things get put into
 # __builtins__ appropriately.
-from gen import *
-import net
-import seq
-import str
-import web
-import file
-import iter
-import crypt
-import error
-import python
-import transaction
+from .gen import *
+from . import net
+from . import seq
+from . import str
+from . import web
+from . import file
+from . import iter
+from . import crypt
+from . import error
+from . import python
+from . import transaction
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

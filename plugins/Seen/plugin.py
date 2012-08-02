@@ -69,7 +69,7 @@ class SeenDB(plugins.ChannelUserDB):
     def seenWildcard(self, channel, nick):
         nicks = ircutils.IrcSet()
         nickRe = re.compile('^%s$' % '.*'.join(nick.split('*')), re.I)
-        for (searchChan, searchNick) in self.keys():
+        for (searchChan, searchNick) in list(self.keys()):
             #print 'chan: %s ... nick: %s' % (searchChan, searchNick)
             if isinstance(searchNick, int):
                 # We need to skip the reponses that are keyed by id as they
@@ -338,7 +338,7 @@ class Seen(callbacks.Plugin):
         msgs = [m for m in irc.state.history[i:end]
                 if m.command == 'PRIVMSG' and ircutils.strEqual(m.args[0], channel)]
         if msgs:
-            irc.reply(format('%L', map(ircmsgs.prettyPrint, msgs)))
+            irc.reply(format('%L', list(map(ircmsgs.prettyPrint, msgs))))
         else:
             irc.reply(format(_('Either %s didn\'t leave, '
                              'or no messages were sent while %s was gone.'), nick, nick))

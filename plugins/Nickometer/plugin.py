@@ -86,7 +86,7 @@ class Nickometer(callbacks.Plugin):
         Tells you how lame said nick is.  If <nick> is not given, uses the
         nick of the person giving the command.
         """
-        score = 0L
+        score = 0
         if not nick:
             nick = msg.nick
         originalNick = nick
@@ -159,7 +159,7 @@ class Nickometer(callbacks.Plugin):
         # Punish k3wlt0k
         k3wlt0k_weights = (5, 5, 2, 5, 2, 3, 1, 2, 2, 2)
         for i in range(len(k3wlt0k_weights)):
-            hits=re.findall(`i`, nick)
+            hits=re.findall(repr(i), nick)
             if (hits and len(hits)>0):
                 score += self.punish(k3wlt0k_weights[i] * len(hits) * 30,
                                     '%s occurrences of %s ' % (len(hits), i))
@@ -221,7 +221,7 @@ class Nickometer(callbacks.Plugin):
                      (1 - 1 / (1 + score / 5.0)) / 2
 
         # if it's above 99.9%, show as many digits as is interesting
-        score_string=re.sub('(99\\.9*\\d|\\.\\d).*','\\1',`percentage`)
+        score_string=re.sub('(99\\.9*\\d|\\.\\d).*','\\1',repr(percentage))
 
         irc.reply(_('The "lame nick-o-meter" reading for "%s" is %s%%.') %
                   (originalNick, score_string))

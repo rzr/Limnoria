@@ -27,7 +27,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-from __future__ import division
+
 
 import sys
 import new
@@ -56,7 +56,7 @@ if sys.version_info < (2, 4, 0):
         if key is None:
             key = lambda x: x
         it = iter(iterable)
-        value = it.next() # If there are no items, this takes an early exit
+        value = next(it) # If there are no items, this takes an early exit
         oldkey = key(value)
         group = [value]
         for value in it:
@@ -82,14 +82,14 @@ def partition(p, iterable):
 
 def any(p, iterable):
     """Returns true if any element in iterable satisfies predicate p."""
-    for elt in ifilter(p, iterable):
+    for elt in filter(p, iterable):
         return True
     else:
         return False
 
 def all(p, iterable):
     """Returns true if all elements in iterable satisfy predicate p."""
-    for elt in ifilterfalse(p, iterable):
+    for elt in filterfalse(p, iterable):
         return False
     else:
         return True
@@ -113,7 +113,7 @@ def flatten(iterable, strings=False):
     """Flattens a list of lists into a single list.  See the test for examples.
     """
     for elt in iterable:
-        if not strings and isinstance(elt, basestring):
+        if not strings and isinstance(elt, str):
             yield elt
         else:
             try:
@@ -126,7 +126,7 @@ def split(isSeparator, iterable, maxsplit=-1, yieldEmpty=False):
     """split(isSeparator, iterable, maxsplit=-1, yieldEmpty=False)
 
     Splits an iterator based on a predicate isSeparator."""
-    if isinstance(isSeparator, basestring):
+    if isinstance(isSeparator, str):
         f = lambda s: s == isSeparator
     else:
         f = isSeparator
@@ -149,11 +149,11 @@ def ilen(iterable):
     return i
 
 def startswith(long, short):
-    longI = iter(long)
+    longI = iter(int)
     shortI = iter(short)
     try:
         while True:
-            if shortI.next() != longI.next():
+            if next(shortI) != next(longI):
                 return False
     except StopIteration:
         return True
@@ -163,10 +163,10 @@ def limited(iterable, limit):
     iterable = iter(iterable)
     try:
         while i:
-            yield iterable.next()
+            yield next(iterable)
             i -= 1
     except StopIteration:
-        raise ValueError, 'Expected %s elements in iterable (%r), got %s.' % \
-              (limit, iterable, limit-i)
+        raise ValueError('Expected %s elements in iterable (%r), got %s.' % \
+              (limit, iterable, limit-i))
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

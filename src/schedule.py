@@ -32,7 +32,7 @@ Schedule plugin with a subclass of drivers.IrcDriver in order to be run as a
 Supybot driver.
 """
 
-from __future__ import with_statement
+
 
 import time
 import heapq
@@ -136,7 +136,7 @@ class Schedule(drivers.IrcDriver):
             del self.events[name]
             try:
                 f(*args, **kwargs)
-            except Exception, e:
+            except Exception as e:
                 log.exception('Uncaught exception in scheduled function:')
 
 

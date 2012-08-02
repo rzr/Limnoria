@@ -115,7 +115,7 @@ class DbiNoteDB(dbi.DB):
     def unsend(self, id):
         self.remove(id)
         for cache in self.unRead, self.unNotified:
-            for (to, ids) in cache.items():
+            for (to, ids) in list(cache.items()):
                 while id in ids:
                     ids.remove(id)
 
@@ -394,7 +394,7 @@ class Note(callbacks.Plugin):
             else:
                 temp[note[1]] = [note[0]]
         notes = []
-        for (k,v) in temp.iteritems():
+        for (k,v) in temp.items():
             if '(private)' in k:
                 k = k.replace('(private)', format('%b private', len(v)))
             notes.append(format('%L %s', v, k))

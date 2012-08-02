@@ -43,7 +43,7 @@ filenames = os.listdir(dirname)
 for filename in filenames:
     if filename.startswith('test_') and filename.endswith('.py'):
         name = filename[:-3]
-        exec 'import %s' % name in GLOBALS
+        exec('import %s' % name, GLOBALS)
         test.suites.append(load(GLOBALS[name]))
 
 module = None

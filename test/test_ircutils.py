@@ -297,7 +297,7 @@ class IrcDictTestCase(SupyTestCase):
 
     def testKeys(self):
         d = ircutils.IrcDict()
-        self.assertEqual(d.keys(), [])
+        self.assertEqual(list(d.keys()), [])
 
     def testSetdefault(self):
         d = ircutils.IrcDict()

@@ -81,7 +81,7 @@ class FilterTest(ChannelPluginTestCase):
         self.assertResponse('unmorse [morse jemfinch]', 'JEMFINCH')
 
     def testReverse(self):
-        for s in map(str, range(1000, 1010)):
+        for s in map(str, list(range(1000, 1010))):
             self.assertResponse('reverse %s' % s, s[::-1])
 
     def testBinary(self):
@@ -91,14 +91,14 @@ class FilterTest(ChannelPluginTestCase):
         self.assertResponse('unbinary 011011010110111101101111', 'moo')
 
     def testRot13(self):
-        for s in map(str, range(1000, 1010)):
+        for s in map(str, list(range(1000, 1010))):
             self.assertResponse('rot13 [rot13 %s]' % s, s)
 
     def testRot13HandlesNonAsciiStuff(self):
         self.assertNotError('rot13 \xe4')
 
     def testHexlifyUnhexlify(self):
-        for s in map(str, range(1000, 1010)):
+        for s in map(str, list(range(1000, 1010))):
             self.assertResponse('unhexlify [hexlify %s]' % s, s)
 
     def testScramble(self):

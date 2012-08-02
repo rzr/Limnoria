@@ -47,9 +47,8 @@ _ = PluginInternationalization('RSS')
 try:
     feedparser = utils.python.universalImport('feedparser', 'local.feedparser')
 except ImportError:
-    raise callbacks.Error, \
-            'You the feedparser module installed to use this plugin.  ' \
-            'Download the module at <http://feedparser.org/>.'
+    raise callbacks.Error('You the feedparser module installed to use this plugin.  ' \
+            'Download the module at <http://feedparser.org/>.')
 
 def getFeedName(irc, msg, args, state):
     if not registry.isValidRegistryName(args[0]):
@@ -93,7 +92,7 @@ class RSS(callbacks.Plugin):
             return True
 
     def listCommands(self):
-        return self.__parent.listCommands(self.feedNames.keys())
+        return self.__parent.listCommands(list(self.feedNames.keys()))
 
     def getCommandMethod(self, command):
         try:
@@ -120,7 +119,7 @@ class RSS(callbacks.Plugin):
                     url = name
                 if self.willGetNewFeed(url):
                     newFeeds.setdefault((url, name), []).append(channel)
-        for ((url, name), channels) in newFeeds.iteritems():
+        for ((url, name), channels) in newFeeds.items():
             # We check if we can acquire the lock right here because if we
             # don't, we'll possibly end up spawning a lot of threads to get
             # the feed, because this thread may run for a number of bytecodes
@@ -182,7 +181,7 @@ class RSS(callbacks.Plugin):
             for (i, headline) in enumerate(newheadlines):
                 if normalize(headline) in oldheadlines:
                     newheadlines[i] = None
-            newheadlines = filter(None, newheadlines) # Removes Nones.
+            newheadlines = [_f for _f in newheadlines if _f] # Removes Nones.
             if newheadlines:
                 def filter_whitelist(headline):
                     v = False
@@ -206,9 +205,9 @@ class RSS(callbacks.Plugin):
                     whitelist = self.registryValue('keywordWhitelist', channel)
                     blacklist = self.registryValue('keywordBlacklist', channel)
                     if len(whitelist) != 0:
-                        channelnewheadlines = filter(filter_whitelist, channelnewheadlines)
+                        channelnewheadlines = list(filter(filter_whitelist, channelnewheadlines))
                     if len(blacklist) != 0:
-                        channelnewheadlines = filter(filter_blacklist, channelnewheadlines)
+                        channelnewheadlines = list(filter(filter_blacklist, channelnewheadlines))
                     if len(channelnewheadlines) == 0:
                         return
                     bold = self.registryValue('bold', channel)
@@ -263,10 +262,10 @@ class RSS(callbacks.Plugin):
                         raise results['bozo_exception']
                 except sgmllib.SGMLParseError:
                     self.log.exception('Uncaught exception from feedparser:')
-                    raise callbacks.Error, 'Invalid (unparsable) RSS feed.'
+                    raise callbacks.Error('Invalid (unparsable) RSS feed.')
                 except socket.timeout:
                     return error('Timeout downloading feed.')
-                except Exception, e:
+                except Exception as e:
                     # These seem mostly harmless.  We'll need reports of a
                     # kind that isn't.
                     self.log.debug('Allowing bozo_exception %r through.', e)
@@ -344,7 +343,7 @@ class RSS(callbacks.Plugin):
             self.locks[url] = threading.RLock()
         if self.isCommandMethod(name):
             s = format('I already have a command in this plugin named %s.',name)
-            raise callbacks.Error, s
+            raise callbacks.Error(s)
         def f(self, irc, msg, args):
             args.insert(0, url)
             self.rss(irc, msg, args)

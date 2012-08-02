@@ -114,7 +114,7 @@ class Factoids(callbacks.Plugin, plugins.ChannelDBHandler):
 
     def getCommandHelp(self, command, simpleSyntax=None):
         method = self.getCommandMethod(command)
-        if method.im_func.func_name == 'learn':
+        if method.__func__.__name__ == 'learn':
             chan = None
             if dynamic.msg is not None:
                 chan = dynamic.msg.args[0]
@@ -219,11 +219,11 @@ class Factoids(callbacks.Plugin, plugins.ChannelDBHandler):
             return []
         flkeys = [line[0] for line in flkeys]
         dl_metrics = [dameraulevenshtein(key, sourcekey) for sourcekey in flkeys]
-        dict_metrics = dict(zip(flkeys, dl_metrics))
+        dict_metrics = dict(list(zip(flkeys, dl_metrics)))
         if min(dl_metrics) <= 2:
-            return [key for key,item in dict_metrics.iteritems() if item <= 2]
+            return [key for key,item in dict_metrics.items() if item <= 2]
         if min(dl_metrics) <= 3:
-            return [key for key,item in dict_metrics.iteritems() if item <= 3]
+            return [key for key,item in dict_metrics.items() if item <= 3]
         
         return []
                 

@@ -30,7 +30,7 @@
 
 import os
 import time
-from cStringIO import StringIO
+from io import StringIO
 
 import supybot.conf as conf
 import supybot.world as world
@@ -88,8 +88,8 @@ class ChannelLogger(callbacks.Plugin):
         self.lastStates.clear()
 
     def _logs(self):
-        for logs in self.logs.itervalues():
-            for log in logs.itervalues():
+        for logs in self.logs.values():
+            for log in logs.values():
                 yield log
 
     def flush(self):
@@ -97,7 +97,7 @@ class ChannelLogger(callbacks.Plugin):
         for log in self._logs():
             try:
                 log.flush()
-            except ValueError, e:
+            except ValueError as e:
                 if e.args[0] != 'I/O operation on a closed file':
                     self.log.exception('Odd exception:')
 
@@ -127,8 +127,8 @@ class ChannelLogger(callbacks.Plugin):
         return logDir
 
     def checkLogNames(self):
-        for (irc, logs) in self.logs.items():
-            for (channel, log) in logs.items():
+        for (irc, logs) in list(self.logs.items()):
+            for (channel, log) in list(logs.items()):
                 if self.registryValue('rotateLogs', channel):
                     name = self.getLogName(channel)
                     if name != log.name:
@@ -201,7 +201,7 @@ class ChannelLogger(callbacks.Plugin):
     def doNick(self, irc, msg):
         oldNick = msg.nick
         newNick = msg.args[0]
-        for (channel, c) in irc.state.channels.iteritems():
+        for (channel, c) in irc.state.channels.items():
             if newNick in c.users:
                 self.doLog(irc, channel,
                            '*** %s is now known as %s\n', oldNick, newNick)
@@ -257,7 +257,7 @@ class ChannelLogger(callbacks.Plugin):
             reason = ""
         if not isinstance(irc, irclib.Irc):
             irc = irc.getRealIrc()
-        for (channel, chan) in self.lastStates[irc].channels.iteritems():
+        for (channel, chan) in self.lastStates[irc].channels.items():
             if msg.nick in chan.users:
                 self.doLog(irc, channel,
                            '*** %s <%s> has quit IRC%s\n',

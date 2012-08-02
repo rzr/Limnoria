@@ -32,7 +32,7 @@ import re
 import cgi
 import time
 import socket
-import urllib
+import urllib.request, urllib.parse, urllib.error
 
 import supybot.conf as conf
 import supybot.utils as utils
@@ -60,10 +60,9 @@ try:
         simplejson = utils.python.universalImport('simplejson',
                                                   'local.simplejson')
 except ImportError:
-    raise callbacks.Error, \
-            'You need Python2.6 or the simplejson module installed to use ' \
+    raise callbacks.Error('You need Python2.6 or the simplejson module installed to use ' \
             'this plugin.  Download the module at ' \
-            '<http://undefined.org/python/#simplejson>.'
+            '<http://undefined.org/python/#simplejson>.')
 
 class Google(callbacks.PluginRegexp):
     threaded = True
@@ -114,7 +113,7 @@ class Google(callbacks.PluginRegexp):
         headers = utils.web.defaultHeaders
         headers['Referer'] = ref
         opts = {'q': query, 'v': '1.0'}
-        for (k, v) in options.iteritems():
+        for (k, v) in options.items():
             if k == 'smallsearch':
                 if v:
                     opts['rsz'] = 'small'
@@ -133,16 +132,16 @@ class Google(callbacks.PluginRegexp):
             opts['rsz'] = 'large'
 
         fd = utils.web.getUrlFd('%s?%s' % (self._gsearchUrl,
-                                           urllib.urlencode(opts)),
+                                           urllib.parse.urlencode(opts)),
                                 headers)
         json = simplejson.load(fd)
         fd.close()
         if json['responseStatus'] != 200:
-            raise callbacks.Error, _('We broke The Google!')
+            raise callbacks.Error(_('We broke The Google!'))
         return json
 
     def formatData(self, data, bold=True, max=0, onetoone=False):
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             return data
         results = []
         if max:
@@ -175,7 +174,7 @@ class Google(callbacks.PluginRegexp):
         data = self.search(text, msg.args[0], {'smallsearch': True})
         if data['responseData']['results']:
             url = data['responseData']['results'][0]['unescapedUrl'].encode('utf-8')
-            if opts.has_key('snippet'):
+            if 'snippet' in opts:
                 snippet = data['responseData']['results'][0]['content'].encode('utf-8')
                 snippet = " | " + utils.web.htmlToText(snippet, tagReplace='')
             else:

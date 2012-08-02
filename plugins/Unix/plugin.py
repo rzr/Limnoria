@@ -152,7 +152,7 @@ class Unix(callbacks.Plugin):
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
                                     stdin=subprocess.PIPE)
-        except OSError, e:
+        except OSError as e:
             irc.error(e, Raise=True)
         ret = inst.poll()
         if ret is not None:
@@ -164,7 +164,7 @@ class Unix(callbacks.Plugin):
             irc.error(s, Raise=True)
         (out, err) = inst.communicate(word)
         inst.wait()
-        lines = filter(None, out.splitlines())
+        lines = [_f for _f in out.splitlines() if _f]
         lines.pop(0) # Banner
         if not lines:
             irc.error(_('No results found.'), Raise=True)
@@ -213,14 +213,14 @@ class Unix(callbacks.Plugin):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         stdin=file(os.devnull))
-            except OSError, e:
+            except OSError as e:
                 irc.error(_('It seems the configured fortune command was '
                           'not available.'), Raise=True)
             (out, err) = inst.communicate()
             inst.wait()
             lines = out.splitlines()
-            lines = map(str.rstrip, lines)
-            lines = filter(None, lines)
+            lines = list(map(str.rstrip, lines))
+            lines = [_f for _f in lines if _f]
             irc.replies(lines, joiner=' ')
         else:
             irc.error(_('The fortune command is not configured. If fortune is '
@@ -293,7 +293,7 @@ class Unix(callbacks.Plugin):
                 inst = subprocess.Popen(args, stdout=subprocess.PIPE,
                                               stderr=subprocess.PIPE,
                                               stdin=file(os.devnull))
-            except OSError, e:
+            except OSError as e:
                 irc.error('It seems the configured ping command was '
                           'not available (%s).' % e, Raise=True)
             result = inst.communicate()
@@ -326,14 +326,14 @@ class Unix(callbacks.Plugin):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         stdin=file(os.devnull))
-            except OSError, e:
+            except OSError as e:
                 irc.error('It seems the configured uptime command was '
                           'not available.', Raise=True)
             (out, err) = inst.communicate()
             inst.wait()
             lines = out.splitlines()
-            lines = map(str.rstrip, lines)
-            lines = filter(None, lines)
+            lines = list(map(str.rstrip, lines))
+            lines = [_f for _f in lines if _f]
             irc.replies(lines, joiner=' ')
         else:
             irc.error('The uptime command is not configured. If uptime is '
@@ -354,14 +354,14 @@ class Unix(callbacks.Plugin):
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         stdin=file(os.devnull))
-            except OSError, e:
+            except OSError as e:
                 irc.error('It seems the configured uptime command was '
                           'not available.', Raise=True)
             (out, err) = inst.communicate()
             inst.wait()
             lines = out.splitlines()
-            lines = map(str.rstrip, lines)
-            lines = filter(None, lines)
+            lines = list(map(str.rstrip, lines))
+            lines = [_f for _f in lines if _f]
             irc.replies(lines, joiner=' ')
         else:
             irc.error('The uname command is not configured. If uname is '
@@ -383,7 +383,7 @@ class Unix(callbacks.Plugin):
             inst = subprocess.Popen(args, stdout=subprocess.PIPE, 
                                           stderr=subprocess.PIPE,
                                           stdin=file(os.devnull))
-        except OSError, e:
+        except OSError as e:
             irc.error('It seems the requested command was '
                       'not available (%s).' % e, Raise=True)
         result = inst.communicate()

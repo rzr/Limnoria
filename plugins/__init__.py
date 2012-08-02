@@ -127,7 +127,7 @@ def DB(filename, types):
                 return types[type](fn, *args, **kwargs)
             except KeyError:
                 continue
-        raise NoSuitableDatabase, types.keys()
+        raise NoSuitableDatabase(list(types.keys()))
     return MakeDB
 
 def makeChannelFilename(filename, channel=None, dirname=None):
@@ -186,7 +186,7 @@ class ChannelDBHandler(object):
         return db
 
     def die(self):
-        for db in self.dbCache.itervalues():
+        for db in self.dbCache.values():
             try:
                 db.commit()
             except AttributeError: # In case it's not an SQLite database.
@@ -216,11 +216,11 @@ class DbiChannelDB(object):
         return db
 
     def close(self):
-        for db in self.dbs.itervalues():
+        for db in self.dbs.values():
             db.close()
 
     def flush(self):
-        for db in self.dbs.itervalues():
+        for db in self.dbs.values():
             db.flush()
 
     def __getattr__(self, attr):
@@ -235,25 +235,28 @@ class ChannelUserDictionary(UserDict.DictMixin):
     def __init__(self):
         self.channels = ircutils.IrcDict()
 
-    def __getitem__(self, (channel, id)):
+    def __getitem__(self, xxx_todo_changeme):
+        (channel, id) = xxx_todo_changeme
         return self.channels[channel][id]
 
-    def __setitem__(self, (channel, id), v):
+    def __setitem__(self, xxx_todo_changeme1, v):
+        (channel, id) = xxx_todo_changeme1
         if channel not in self.channels:
             self.channels[channel] = self.IdDict()
         self.channels[channel][id] = v
 
-    def __delitem__(self, (channel, id)):
+    def __delitem__(self, xxx_todo_changeme2):
+        (channel, id) = xxx_todo_changeme2
         del self.channels[channel][id]
 
     def iteritems(self):
-        for (channel, ids) in self.channels.iteritems():
-            for (id, v) in ids.iteritems():
+        for (channel, ids) in self.channels.items():
+            for (id, v) in ids.items():
                 yield ((channel, id), v)
 
     def keys(self):
         L = []
-        for (k, _) in self.iteritems():
+        for (k, _) in self.items():
             L.append(k)
         return L
 
@@ -268,7 +271,7 @@ class ChannelUserDB(ChannelUserDictionary):
         self.filename = filename
         try:
             fd = file(self.filename)
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             log.warning('Couldn\'t open %s: %s.', self.filename, e)
             return
         reader = csv.reader(fd)
@@ -286,11 +289,11 @@ class ChannelUserDB(ChannelUserDictionary):
                         pass
                     v = self.deserialize(channel, id, t)
                     self[channel, id] = v
-                except Exception, e:
+                except Exception as e:
                     log.warning('Invalid line #%s in %s.',
                                 lineno, self.__class__.__name__)
                     log.debug('Exception: %s', utils.exnToString(e))
-        except Exception, e: # This catches exceptions from csv.reader.
+        except Exception as e: # This catches exceptions from csv.reader.
             log.warning('Invalid line #%s in %s.',
                         lineno, self.__class__.__name__)
             log.debug('Exception: %s', utils.exnToString(e))
@@ -298,7 +301,7 @@ class ChannelUserDB(ChannelUserDictionary):
     def flush(self):
         fd = utils.file.AtomicFile(self.filename, makeBackupIfSmaller=False)
         writer = csv.writer(fd)
-        items = self.items()
+        items = list(self.items())
         if not items:
             log.debug('%s: Refusing to write blank file.',
                       self.__class__.__name__)
@@ -534,7 +537,7 @@ class PeriodicFileDownloader(object):
     periodicFiles = None
     def __init__(self):
         if self.periodicFiles is None:
-            raise ValueError, 'You must provide files to download'
+            raise ValueError('You must provide files to download')
         self.lastDownloaded = {}
         self.downloadedCounter = {}
         for filename in self.periodicFiles:
@@ -556,10 +559,10 @@ class PeriodicFileDownloader(object):
         try:
             try:
                 infd = utils.web.getUrlFd(url)
-            except IOError, e:
+            except IOError as e:
                 self.log.warning('Error downloading %s: %s', url, e)
                 return
-            except utils.web.Error, e:
+            except utils.web.Error as e:
                 self.log.warning('Error downloading %s: %s', url, e)
                 return
             confDir = conf.supybot.directories.data()

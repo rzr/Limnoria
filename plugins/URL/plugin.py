@@ -112,7 +112,7 @@ class URL(callbacks.Plugin):
         f = None
         nolimit = False
         for (option, arg) in optlist:
-            if isinstance(arg, basestring):
+            if isinstance(arg, str):
                 arg = arg.lower()
             if option == 'nolimit':
                 nolimit = True

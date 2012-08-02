@@ -84,9 +84,9 @@ class GeneralContextTestCase(CommandsTestCase):
             conf.supybot.protocols.irc.strictRfc.setValue(strict)
 
     def testSpecLong(self):
-        self.assertState(['long'], ['1'], [1L])
+        self.assertState(['long'], ['1'], [1])
         self.assertState(['long', 'long', 'long'], ['1', '2', '3'],
-                         [1L, 2L, 3L])
+                         [1, 2, 3])
 
     def testRestHandling(self):
         self.assertState([rest(None)], ['foo', 'bar', 'baz'], ['foo bar baz'])

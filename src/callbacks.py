@@ -37,11 +37,11 @@ import supybot
 import re
 import copy
 import time
-import shlex
+from . import shlex
 import getopt
 import inspect
 import operator
-from cStringIO import StringIO
+from io import StringIO
 
 import supybot.log as log
 import supybot.conf as conf
@@ -90,7 +90,7 @@ def _addressed(nick, msg, prefixChars=None, nicks=None,
         return payload[1:].strip()
     if nicks is None:
         nicks = get(conf.supybot.reply.whenAddressedBy.nicks)
-        nicks = map(ircutils.toLower, nicks)
+        nicks = list(map(ircutils.toLower, nicks))
     else:
         nicks = list(nicks) # Just in case.
     nicks.insert(0, ircutils.toLower(nick))
@@ -151,7 +151,7 @@ def canonicalName(command):
     Currently, this makes everything lowercase and removes all dashes and
     underscores.
     """
-    if isinstance(command, unicode):
+    if isinstance(command, str):
         command = command.encode('utf-8')
     special = '\t -_'
     reAppend = ''
@@ -289,11 +289,11 @@ class Tokenizer(object):
         while True:
             token = lexer.get_token()
             if not token:
-                raise SyntaxError, _('Missing "%s".  You may want to '
+                raise SyntaxError(_('Missing "%s".  You may want to '
                                    'quote your arguments with double '
                                    'quotes in order to prevent extra '
                                    'brackets from being evaluated '
-                                   'as nested commands.') % self.right
+                                   'as nested commands.') % self.right)
             elif token == self.right:
                 return ret
             elif token == self.left:
@@ -319,26 +319,26 @@ class Tokenizer(object):
                 # for strings like 'foo | bar', where a pipe stands alone as a
                 # token, but shouldn't be treated specially.
                 if not args:
-                    raise SyntaxError, _('"|" with nothing preceding.  I '
+                    raise SyntaxError(_('"|" with nothing preceding.  I '
                                        'obviously can\'t do a pipe with '
-                                       'nothing before the |.')
+                                       'nothing before the |.'))
                 ends.append(args)
                 args = []
             elif token == self.left:
                 args.append(self._insideBrackets(lexer))
             elif token == self.right:
-                raise SyntaxError, _('Spurious "%s".  You may want to '
+                raise SyntaxError(_('Spurious "%s".  You may want to '
                                    'quote your arguments with double '
                                    'quotes in order to prevent extra '
                                    'brackets from being evaluated '
-                                   'as nested commands.') % self.right
+                                   'as nested commands.') % self.right)
             else:
                 args.append(self._handleToken(token))
         if ends:
             if not args:
-                raise SyntaxError, _('"|" with nothing following.  I '
+                raise SyntaxError(_('"|" with nothing following.  I '
                                    'obviously can\'t do a pipe with '
-                                   'nothing after the |.')
+                                   'nothing after the |.'))
             args.append(ends.pop())
             while ends:
                 args[-1].append(ends.pop())
@@ -358,14 +358,14 @@ def tokenize(s, channel=None):
     try:
         ret = Tokenizer(brackets=brackets,pipe=pipe,quotes=quotes).tokenize(s)
         return ret
-    except ValueError, e:
-        raise SyntaxError, str(e)
+    except ValueError as e:
+        raise SyntaxError(str(e))
 
 def formatCommand(command):
     return ' '.join(command)
 
 def checkCommandCapability(msg, cb, commandName):
-    assert isinstance(commandName, basestring), commandName
+    assert isinstance(commandName, str), commandName
     plugin = cb.name().lower()
     pluginCommand = '%s.%s' % (plugin, commandName)
     def checkCapability(capability):
@@ -373,7 +373,7 @@ def checkCommandCapability(msg, cb, commandName):
         if ircdb.checkCapability(msg.prefix, capability):
             log.info('Preventing %s from calling %s because of %s.',
                      msg.prefix, pluginCommand, capability)
-            raise RuntimeError, capability
+            raise RuntimeError(capability)
     try:
         antiPlugin = ircdb.makeAntiCapability(plugin)
         antiCommand = ircdb.makeAntiCapability(commandName)
@@ -398,7 +398,7 @@ def checkCommandCapability(msg, cb, commandName):
         return not (default or \
                     any(lambda x: ircdb.checkCapability(msg.prefix, x),
                         checkAtEnd))
-    except RuntimeError, e:
+    except RuntimeError as e:
         s = ircdb.unAntiCapability(str(e))
         return s
 
@@ -440,9 +440,9 @@ class RichReplyMethods(object):
             prefixer = ''
         if joiner is None:
             joiner = utils.str.commaAndify
-        if isinstance(prefixer, basestring):
+        if isinstance(prefixer, str):
             prefixer = prefixer.__add__
-        if isinstance(joiner, basestring):
+        if isinstance(joiner, str):
             joiner = joiner.join
         if conf.supybot.reply.oneToOne():
             return self.reply(prefixer(joiner(L)), **kwargs)
@@ -465,14 +465,14 @@ class RichReplyMethods(object):
 
     def _error(self, s, Raise=False, **kwargs):
         if Raise:
-            raise Error, s
+            raise Error(s)
         else:
             return self.error(s, **kwargs)
 
     def errorNoCapability(self, capability, s='', **kwargs):
         if 'Raise' not in kwargs:
             kwargs['Raise'] = True
-        if isinstance(capability, basestring): # checkCommandCapability!
+        if isinstance(capability, str): # checkCommandCapability!
             log.warning('Denying %s for lacking %q capability.',
                         self.msg.prefix, capability)
             if not self._getConfig(conf.supybot.reply.error.noCapability):
@@ -559,7 +559,7 @@ class ReplyIrcProxy(RichReplyMethods):
     def error(self, s, msg=None, **kwargs):
         if 'Raise' in kwargs and kwargs['Raise']:
             if s:
-                raise Error, s
+                raise Error(s)
             else:
                 raise ArgumentError
         if msg is None:
@@ -638,7 +638,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
     def evalArgs(self):
         while self.counter < len(self.args):
             self.repliedTo = False
-            if isinstance(self.args[self.counter], basestring):
+            if isinstance(self.args[self.counter], str):
                 # If it's a string, just go to the next arg.  There is no
                 # evaluation to be done for strings.  If, at some point,
                 # we decided to, say, convert every string using
@@ -661,7 +661,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
                 return
         # Once all the list args are evaluated, we then evaluate our own
         # list of args, since we're assured that they're all strings now.
-        assert all(lambda x: isinstance(x, basestring), self.args)
+        assert all(lambda x: isinstance(x, str), self.args)
         self.finalEval()
 
     def _callInvalidCommands(self):
@@ -678,9 +678,9 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
                 log.debug('Calling %s.invalidCommand.', cb.name())
                 try:
                     cb.invalidCommand(self, self.msg, self.args)
-                except Error, e:
+                except Error as e:
                     self.error(str(e))
-                except Exception, e:
+                except Exception as e:
                     log.exception('Uncaught exception in %s.invalidCommand.',
                                   cb.name())
                 log.debug('Finished calling %s.invalidCommand.', cb.name())
@@ -699,7 +699,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
         """Returns a two-tuple of (command, plugins) that has the command
         (a list of strings) and the plugins for which it was a command."""
         assert isinstance(args, list)
-        args = map(canonicalName, args)
+        args = list(map(canonicalName, args))
         cbs = []
         maxL = []
         for cb in self.irc.callbacks:
@@ -744,7 +744,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
 
             # 3. Whether an importantPlugin is one of the responses.
             important = defaultPlugins.importantPlugins()
-            important = map(canonicalName, important)
+            important = list(map(canonicalName, important))
             importants = []
             for cb in cbs:
                 if cb.canonicalName() in important:
@@ -835,7 +835,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
         # action=True implies noLengthCheck=True and prefixNick=False
         self.noLengthCheck=noLengthCheck or self.noLengthCheck or self.action
         target = self.private and self.to or self.msg.args[0]
-        if not isinstance(s, basestring): # avoid trying to str() unicode
+        if not isinstance(s, str): # avoid trying to str() unicode
             s = str(s) # Allow non-string esses.
         if self.finalEvaled:
             try:
@@ -952,7 +952,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
         self.repliedTo = True
         if Raise:
             if s:
-                raise Error, s
+                raise Error(s)
             else:
                 raise ArgumentError
         if s:
@@ -976,7 +976,7 @@ class CommandThread(world.SupyThread):
     """
     def __init__(self, target=None, args=(), kwargs={}):
         self.command = args[0]
-        self.cb = target.im_self
+        self.cb = target.__self__
         threadName = 'Thread #%s (for %s.%s)' % (world.threadsSpawned,
                                                  self.cb.name(),
                                                  self.command)
@@ -1090,8 +1090,7 @@ class BasePlugin(object):
 class SynchronizedAndFirewalled(log.MetaFirewall, utils.python.Synchronized):
     pass # Necessary for the metaclass compatibility issue.
 
-class Commands(BasePlugin):
-    __metaclass__ = SynchronizedAndFirewalled
+class Commands(BasePlugin, metaclass=SynchronizedAndFirewalled):
     __synchronized__ = (
         '__call__',
         'callCommand',
@@ -1129,7 +1128,7 @@ class Commands(BasePlugin):
         if hasattr(self, name):
             method = getattr(self, name)
             if inspect.ismethod(method):
-                code = method.im_func.func_code
+                code = method.__func__.__code__
                 return inspect.getargs(code)[0] == self.commandArgs
             else:
                 return False
@@ -1138,7 +1137,7 @@ class Commands(BasePlugin):
 
     def isCommand(self, command):
         """Convenience, backwards-compatibility, semi-deprecated."""
-        if isinstance(command, basestring):
+        if isinstance(command, str):
             return self.isCommandMethod(command)
         else:
             # Since we're doing a little type dispatching here, let's not be
@@ -1147,7 +1146,7 @@ class Commands(BasePlugin):
             return self.getCommand(command) == command
 
     def getCommand(self, args):
-        assert args == map(canonicalName, args)
+        assert args == list(map(canonicalName, args))
         first = args[0]
         for cb in self.cbs:
             if first == cb.canonicalName():
@@ -1163,8 +1162,8 @@ class Commands(BasePlugin):
     def getCommandMethod(self, command):
         """Gets the given command from this plugin."""
         #print '*** %s.getCommandMethod(%r)' % (self.name(), command)
-        assert not isinstance(command, basestring)
-        assert command == map(canonicalName, command)
+        assert not isinstance(command, str)
+        assert command == list(map(canonicalName, command))
         assert self.getCommand(command) == command
         for cb in self.cbs:
             if command[0] == cb.canonicalName():
@@ -1175,7 +1174,7 @@ class Commands(BasePlugin):
         else:
             method = getattr(self, command[0])
             if inspect.ismethod(method):
-                code = method.im_func.func_code
+                code = method.__func__.__code__
                 if inspect.getargs(code)[0] == self.commandArgs:
                     return method
                 else:
@@ -1223,7 +1222,7 @@ class Commands(BasePlugin):
                 self.callingCommand = None
         except SilentError:
             pass
-        except (getopt.GetoptError, ArgumentError), e:
+        except (getopt.GetoptError, ArgumentError) as e:
             self.log.debug('Got %s, giving argument error.',
                            utils.exnToString(e))
             help = self.getCommandHelp(command)
@@ -1231,10 +1230,10 @@ class Commands(BasePlugin):
                 irc.error(_('Invalid arguments for %s.') % method.__name__)
             else:
                 irc.reply(help)
-        except (SyntaxError, Error), e:
+        except (SyntaxError, Error) as e:
             self.log.debug('Error return: %s', utils.exnToString(e))
             irc.error(str(e))
-        except Exception, e:
+        except Exception as e:
             self.log.exception('Uncaught exception in %s.', command)
             if conf.supybot.reply.error.detailed():
                 irc.error(utils.exnToString(e))
@@ -1398,9 +1397,9 @@ class PluginRegexp(Plugin):
         method = getattr(self, name)
         try:
             method(irc, msg, m)
-        except Error, e:
+        except Error as e:
             irc.error(str(e))
-        except Exception, e:
+        except Exception as e:
             self.log.exception('Uncaught exception in _callRegexp:')
 
     def invalidCommand(self, irc, msg, tokens):

@@ -31,10 +31,10 @@
 import os
 import json
 import shutil
-import urllib
-import urllib2
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
 import tarfile
-from cStringIO import StringIO
+from io import StringIO
 
 
 import supybot.log as log
@@ -76,9 +76,9 @@ class GithubRepository(GitRepository):
 
     _apiUrl = 'https://api.github.com'
     def _query(self, type_, uri_end, args={}):
-        args = dict([(x,y) for x,y in args.items() if y is not None])
+        args = dict([(x,y) for x,y in list(args.items()) if y is not None])
         url = '%s/%s/%s?%s' % (self._apiUrl, type_, uri_end,
-                               urllib.urlencode(args))
+                               urllib.parse.urlencode(args))
         return json.load(utils.web.getUrlFd(url))
 
     def getPluginList(self):
@@ -101,7 +101,7 @@ class GithubRepository(GitRepository):
 
     def _download(self, plugin):
         try:
-            fileObject = urllib2.urlopen(self._downloadUrl)
+            fileObject = urllib.request.urlopen(self._downloadUrl)
             fileObject2 = StringIO()
             fileObject2.write(fileObject.read())
             fileObject.close()

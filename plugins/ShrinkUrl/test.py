@@ -50,7 +50,7 @@ class ShrinkUrlTestCase(ChannelPluginTestCase):
             }
     if network:
         def testShrink(self):
-            for (service, testdata) in self.tests.iteritems():
+            for (service, testdata) in self.tests.items():
                 for (url, shrunkurl) in testdata:
                     self.assertRegexp('shrinkurl %s %s' % (service, url),
                                       shrunkurl)

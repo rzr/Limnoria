@@ -81,7 +81,7 @@ def normalizeWhitespace(s):
 try:
     from distutils.core import setup
     from distutils.sysconfig import get_python_lib
-except ImportError, e:
+except ImportError as e:
     s = normalizeWhitespace("""Supybot requires the distutils package to
     install. This package is normally included with Python, but for some
     unfathomable reason, many distributions to take it out of standard Python
@@ -102,10 +102,10 @@ if clean:
     previousInstall = os.path.join(get_python_lib(), 'supybot')
     if os.path.exists(previousInstall):
         try:
-            print 'Removing current installation.'
+            print('Removing current installation.')
             shutil.rmtree(previousInstall)
-        except Exception, e:
-            print 'Couldn\'t remove former installation: %s' % e
+        except Exception as e:
+            print(('Couldn\'t remove former installation: %s' % e))
             sys.exit(-1)
 
 packages = ['supybot',

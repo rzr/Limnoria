@@ -40,13 +40,14 @@ import time
 import random
 import string
 import textwrap
-from cStringIO import StringIO as sio
+from io import StringIO as sio
 
 import supybot.utils as utils
+import collections
 
 def debug(s, *args):
     """Prints a debug string.  Most likely replaced by our logging debug."""
-    print '***', s % args
+    print('***', s % args)
 
 userHostmaskRe = re.compile(r'^\S+!\S+@\S+$')
 def isUserHostmask(s):
@@ -82,13 +83,13 @@ def splitHostmask(hostmask):
     assert isUserHostmask(hostmask)
     nick, rest = hostmask.split('!', 1)
     user, host = rest.split('@', 1)
-    return (intern(nick), intern(user), intern(host))
+    return (sys.intern(nick), sys.intern(user), sys.intern(host))
 
 def joinHostmask(nick, ident, host):
     """nick, user, host => hostmask
     Joins the nick, ident, host into a user hostmask."""
     assert nick and ident and host
-    return intern('%s!%s@%s' % (nick, ident, host))
+    return sys.intern('%s!%s@%s' % (nick, ident, host))
 
 _rfc1459trans = string.maketrans(string.ascii_uppercase + r'\[]~',
                                  string.ascii_lowercase + r'|{}^')
@@ -100,13 +101,13 @@ def toLower(s, casemapping=None):
     elif casemapping == 'ascii': # freenode
         return s.lower()
     else:
-        raise ValueError, 'Invalid casemapping: %r' % casemapping
+        raise ValueError('Invalid casemapping: %r' % casemapping)
 
 def strEqual(nick1, nick2):
     """s1, s2 => bool
     Returns True if nick1 == nick2 according to IRC case rules."""
-    assert isinstance(nick1, basestring)
-    assert isinstance(nick2, basestring)
+    assert isinstance(nick1, str)
+    assert isinstance(nick2, str)
     return toLower(nick1) == toLower(nick2)
 
 nickEqual = strEqual
@@ -456,9 +457,9 @@ def isValidArgument(s):
 
 def safeArgument(s):
     """If s is unsafe for IRC, returns a safe version."""
-    if isinstance(s, unicode):
+    if isinstance(s, str):
         s = s.encode('utf-8')
-    elif not isinstance(s, basestring):
+    elif not isinstance(s, str):
         debug('Got a non-string in safeArgument: %r', s)
         s = str(s)
     if isValidArgument(s):
@@ -486,7 +487,7 @@ def dccIP(ip):
 
 def unDccIP(i):
     """Takes an integer DCC IP and return a normal string IP."""
-    assert isinstance(i, (int, long)), '%r is not an number.' % i
+    assert isinstance(i, int), '%r is not an number.' % i
     L = []
     while len(L) < 4:
         L.append(i % 256)
@@ -524,7 +525,7 @@ class IrcDict(utils.InsensitivePreservingDict):
 class CallableValueIrcDict(IrcDict):
     def __getitem__(self, k):
         v = super(IrcDict, self).__getitem__(k)
-        if callable(v):
+        if isinstance(v, collections.Callable):
             v = v()
         return v
 
@@ -557,7 +558,7 @@ class FloodQueue(object):
         return msg.host
 
     def getTimeout(self):
-        if callable(self.timeout):
+        if isinstance(self.timeout, collections.Callable):
             return self.timeout()
         else:
             return self.timeout
@@ -626,7 +627,7 @@ mircColors = IrcDict({
 })
 
 # We'll map integers to their string form so mircColor is simpler.
-for (k, v) in mircColors.items():
+for (k, v) in list(mircColors.items()):
     if k is not None: # Ignore empty string for None.
         sv = str(v)
         mircColors[sv] = sv

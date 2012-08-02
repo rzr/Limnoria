@@ -45,8 +45,8 @@ useBold = False
 def output(s, unformatted=True, fd=sys.stdout):
     if unformatted:
         s = textwrap.fill(utils.str.normalizeWhitespace(s), width=65)
-    print >>fd, s
-    print >>fd
+    print(s, file=fd)
+    print(file=fd)
 
 def expect(prompt, possibilities, recursed=False, default=None,
            acceptEmpty=False, fd=sys.stdout):
@@ -76,10 +76,10 @@ def expect(prompt, possibilities, recursed=False, default=None,
     prompt = prompt.strip() + ' '
     if useBold:
         prompt += ansi.RESET
-        print >>fd, ansi.BOLD,
-    s = raw_input(prompt)
+        print(ansi.BOLD, end=' ', file=fd)
+    s = input(prompt)
     s = s.strip()
-    print >>fd
+    print(file=fd)
     if possibilities:
         if s in possibilities:
             return s

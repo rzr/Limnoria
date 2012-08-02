@@ -38,6 +38,7 @@ import math
 import supybot.cdb as cdb
 import supybot.utils as utils
 from supybot.utils.iter import ilen
+import collections
 
 class Error(Exception):
     """General error for this module."""
@@ -118,7 +119,7 @@ class DirMapping(MappingInterface):
         try:
             fd = file(self._makeFilename(id))
             return fd.read()
-        except EnvironmentError, e:
+        except EnvironmentError as e:
             exn = NoRecordError(id)
             exn.realException = e
             raise exn
@@ -140,8 +141,8 @@ class DirMapping(MappingInterface):
     def remove(self, id):
         try:
             os.remove(self._makeFilename(id))
-        except EnvironmentError, e:
-            raise NoRecordError, id
+        except EnvironmentError as e:
+            raise NoRecordError(id)
 
 class FlatfileMapping(MappingInterface):
     def __init__(self, filename, maxSize=10**6):
@@ -153,8 +154,8 @@ class FlatfileMapping(MappingInterface):
             try:
                 self.currentId = int(strId)
             except ValueError:
-                raise Error, 'Invalid file for FlatfileMapping: %s' % filename
-        except EnvironmentError, e:
+                raise Error('Invalid file for FlatfileMapping: %s' % filename)
+        except EnvironmentError as e:
             # File couldn't be opened.
             self.maxSize = int(math.log10(maxSize))
             self.currentId = 0
@@ -205,7 +206,7 @@ class FlatfileMapping(MappingInterface):
                 (lineId, s) = self._splitLine(line)
                 if lineId == strId:
                     return s
-            raise NoRecordError, id
+            raise NoRecordError(id)
         finally:
             fd.close()
 
@@ -291,7 +292,7 @@ class CdbMapping(MappingInterface):
         try:
             return self.db[str(id)]
         except KeyError:
-            raise NoRecordError, id
+            raise NoRecordError(id)
 
     # XXX Same as above.
     def set(self, id, s):
@@ -306,7 +307,7 @@ class CdbMapping(MappingInterface):
         del self.db[str(id)]
 
     def __iter__(self):
-        for (id, s) in self.db.iteritems():
+        for (id, s) in self.db.items():
             if id != 'nextId':
                 yield (int(id), s)
 
@@ -325,7 +326,7 @@ class DB(object):
             self.Record = Record
         if Mapping is not None:
             self.Mapping = Mapping
-        if isinstance(self.Mapping, basestring):
+        if isinstance(self.Mapping, str):
             self.Mapping = Mappings[self.Mapping]
         self.map = self.Mapping(filename)
 
@@ -408,14 +409,14 @@ class Record(object):
             self.defaults[name] = default
             self.converters[name] = converter
         seen = set()
-        for (name, value) in kwargs.iteritems():
+        for (name, value) in kwargs.items():
             assert name in self.fields, 'name must be a record value.'
             seen.add(name)
             setattr(self, name, value)
         for name in self.fields:
             if name not in seen:
                 default = self.defaults[name]
-                if callable(default):
+                if isinstance(default, collections.Callable):
                     default = default()
                 setattr(self, name, default)
 

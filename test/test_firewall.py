@@ -37,8 +37,7 @@ class FirewallTestCase(SupyTestCase):
     def tearDown(self):
         log.testing = True
 
-    class C(object):
-        __metaclass__ = log.MetaFirewall
+    class C(object, metaclass=log.MetaFirewall):
         __firewalled__ = {'foo': None}
         class MyException(Exception):
             pass

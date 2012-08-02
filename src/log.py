@@ -57,7 +57,8 @@ class Formatter(logging.Formatter):
     def formatTime(self, record, datefmt=None):
         return timestamp(record.created)
 
-    def formatException(self, (E, e, tb)):
+    def formatException(self, xxx_todo_changeme):
+        (E, e, tb) = xxx_todo_changeme
         for exn in deadlyExceptions:
             if issubclass(e.__class__, exn):
                 raise
@@ -95,10 +96,10 @@ class StdoutStreamHandler(logging.StreamHandler):
         if record.levelname != 'ERROR' and conf.supybot.log.stdout.wrap():
             # We check for ERROR there because otherwise, tracebacks (which are
             # already wrapped by Python itself) wrap oddly.
-            if not isinstance(record.levelname, basestring):
-                print record
-                print record.levelname
-                print utils.stackTrace()
+            if not isinstance(record.levelname, str):
+                print(record)
+                print(record.levelname)
+                print(utils.stackTrace())
             prefixLen = len(record.levelname) + 1 # ' '
             s = textwrap.fill(s, width=78, subsequent_indent=' '*prefixLen)
             s.rstrip('\r\n')
@@ -108,13 +109,13 @@ class StdoutStreamHandler(logging.StreamHandler):
         if conf.supybot.log.stdout() and not conf.daemonized:
             try:
                 logging.StreamHandler.emit(self, record)
-            except ValueError, e: # Raised if sys.stdout is closed.
+            except ValueError as e: # Raised if sys.stdout is closed.
                 self.disable()
                 error('Error logging to stdout.  Removing stdout handler.')
                 exception('Uncaught exception in StdoutStreamHandler:')
 
     def disable(self):
-        self.setLevel(sys.maxint) # Just in case.
+        self.setLevel(sys.maxsize) # Just in case.
         _logger.removeHandler(self)
         logging._acquireLock()
         try:
@@ -143,7 +144,8 @@ class ColorizedFormatter(Formatter):
     # This was necessary because these variables aren't defined until later.
     # The staticmethod is necessary because they get treated like methods.
     _fmtConf = staticmethod(lambda : conf.supybot.log.stdout.format())
-    def formatException(self, (E, e, tb)):
+    def formatException(self, xxx_todo_changeme1):
+        (E, e, tb) = xxx_todo_changeme1
         if conf.supybot.log.stdout.colorized():
             return ''.join([ansi.RED,
                             Formatter.formatException(self, (E, e, tb)),
@@ -175,23 +177,22 @@ conf.registerGlobalValue(conf.supybot.directories, 'log',
 
 _logDir = conf.supybot.directories.log()
 if not os.path.exists(_logDir):
-    os.mkdir(_logDir, 0755)
+    os.mkdir(_logDir, 0o755)
 
 pluginLogDir = os.path.join(_logDir, 'plugins')
 
 if not os.path.exists(pluginLogDir):
-    os.mkdir(pluginLogDir, 0755)
+    os.mkdir(pluginLogDir, 0o755)
 
 try:
     messagesLogFilename = os.path.join(_logDir, 'messages.log')
     _handler = BetterFileHandler(messagesLogFilename)
-except EnvironmentError, e:
-    raise SystemExit, \
-          'Error opening messages logfile (%s).  ' \
+except EnvironmentError as e:
+    raise SystemExit('Error opening messages logfile (%s).  ' \
           'Generally, this is because you are running Supybot in a directory ' \
           'you don\'t have permissions to add files in, or you\'re running ' \
           'Supybot as a different user than you normal do.  The original ' \
-          'error was: %s' % (messagesLogFilename, utils.gen.exnToString(e))
+          'error was: %s' % (messagesLogFilename, utils.gen.exnToString(e)))
 
 # These are public.
 formatter = Formatter('NEVER SEEN; IF YOU SEE THIS, FILE A BUG!')
@@ -345,20 +346,20 @@ def firewall(f, errorHandler=None):
         if hasattr(self, 'log'):
             self.log.exception('%s:', s)
         else:
-            exception('%s in %s.%s:', s, self.__class__.__name__, f.func_name)
+            exception('%s in %s.%s:', s, self.__class__.__name__, f.__name__)
     def m(self, *args, **kwargs):
         try:
             return f(self, *args, **kwargs)
-        except Exception, e:
+        except Exception as e:
             if testing:
                 raise
             logException(self)
             if errorHandler is not None:
                 try:
                     return errorHandler(self, *args, **kwargs)
-                except Exception, e:
+                except Exception as e:
                     logException(self, 'Uncaught exception in errorHandler')
-    m = utils.python.changeFunctionName(m, f.func_name, f.__doc__)
+    m = utils.python.changeFunctionName(m, f.__name__, f.__doc__)
     return m
 
 class MetaFirewall(type):
@@ -368,7 +369,7 @@ class MetaFirewall(type):
             if hasattr(base, '__firewalled__'):
                 cls.updateFirewalled(firewalled, base.__firewalled__)
         cls.updateFirewalled(firewalled, classdict.get('__firewalled__', []))
-        for (attr, errorHandler) in firewalled.iteritems():
+        for (attr, errorHandler) in firewalled.items():
             if attr in classdict:
                 classdict[attr] = firewall(classdict[attr], errorHandler)
         return super(MetaFirewall, cls).__new__(cls, name, bases, classdict)

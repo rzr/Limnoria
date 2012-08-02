@@ -34,7 +34,7 @@ from supybot.utils.iter import all
 import supybot.ircutils as ircutils
 
 class holder:
-    users = set(map(str, range(1000)))
+    users = set(map(str, list(range(1000))))
 
 class FunctionsTestCase(SupyTestCase):
     class irc:

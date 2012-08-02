@@ -31,7 +31,7 @@
 import re
 import string
 import random
-from cStringIO import StringIO
+from io import StringIO
 
 import supybot.conf as conf
 import supybot.utils as utils
@@ -110,7 +110,7 @@ class Filter(callbacks.Plugin):
         named 'hebrew' it's because I (jemfinch) thought of it in Hebrew class,
         and printed Hebrew often elides the vowels.)
         """
-        text = filter(lambda c: c not in 'aeiou', text)
+        text = [c for c in text if c not in 'aeiou']
         irc.reply(text)
     hebrew = wrap(hebrew, ['text'])
 
@@ -170,7 +170,7 @@ class Filter(callbacks.Plugin):
         Returns the character representation of binary <text>.
         Assumes ASCII, 8 digits per character.
         """
-        L = [chr(int(text[i:(i+8)], 2)) for i in xrange(0, len(text), 8)]
+        L = [chr(int(text[i:(i+8)], 2)) for i in range(0, len(text), 8)]
         irc.reply(''.join(L))
     unbinary = wrap(unbinary, ['text'])
 
@@ -338,7 +338,7 @@ class Filter(callbacks.Plugin):
         "@" : ".--.-.",
         "=" : "-...-"
     }
-    _revMorseCode = dict([(y, x) for (x, y) in _morseCode.items()])
+    _revMorseCode = dict([(y, x) for (x, y) in list(_morseCode.items())])
     _unmorsere = re.compile('([.-]+)')
     @internationalizeDocstring
     def unmorse(self, irc, msg, args, text):
@@ -404,7 +404,7 @@ class Filter(callbacks.Plugin):
         Returns <text> colorized like a rainbow.
         """
         colors = utils.iter.cycle(['04', '07', '08', '03', '02', '12', '06'])
-        L = [self._color(c, fg=colors.next()) for c in text]
+        L = [self._color(c, fg=next(colors)) for c in text]
         irc.reply(''.join(L) + '\x03')
     rainbow = wrap(rainbow, ['text'])
 
@@ -508,7 +508,7 @@ class Filter(callbacks.Plugin):
             r'\blike\b': 'liek',
             r'[^e]ing\b': 'eing',
             }
-        for (r, s) in alwaysInsertions.iteritems():
+        for (r, s) in alwaysInsertions.items():
             text = re.sub(r, s, text)
         randomInsertions = {
             r'i': 'ui',
@@ -526,7 +526,7 @@ class Filter(callbacks.Plugin):
             r'\btheir\b': 'there',
             r'[^e]y': 'ey',
             }
-        for (r, s) in randomInsertions.iteritems():
+        for (r, s) in randomInsertions.items():
             text = re.sub(r, randomlyReplace(s), text)
         text = re.sub(r'(\w)\'(\w)', quoteOrNothing, text)
         text = re.sub(r'\.(\s+|$)', randomExclaims, text)
@@ -550,7 +550,7 @@ class Filter(callbacks.Plugin):
         'v': _('vee'), 'w': _('double-you'), 'x': _('ecks'), 'y': _('why'),
         'z': _('zee')
     }
-    for (k, v) in _spellLetters.items():
+    for (k, v) in list(_spellLetters.items()):
         _spellLetters[k.upper()] = v
     _spellPunctuation = {
         '!': _('exclamation point'),
@@ -663,39 +663,39 @@ class Filter(callbacks.Plugin):
     # XXX suckiest: B,K,P,Q,T
     # alternatives: 3: U+2107
     _uniudMap = {
-    ' ': u' ',      '0': u'0',      '@': u'@',
-    '!': u'\u00a1', '1': u'1',      'A': u'\u2200',
-    '"': u'\u201e', '2': u'\u2681', 'B': u'q',
-    '#': u'#',      '3': u'\u0190', 'C': u'\u0186',
-    '$': u'$',      '4': u'\u2683', 'D': u'\u15e1',
-    '%': u'%',      '5': u'\u1515', 'E': u'\u018e',
-    '&': u'\u214b', '6': u'9',      'F': u'\u2132',
-    "'": u'\u0375', '7': u'L',      'G': u'\u2141',
-    '(': u')',      '8': u'8',      'H': u'H',
-    ')': u'(',      '9': u'6',      'I': u'I',
-    '*': u'*',      ':': u':',      'J': u'\u148b',
-    '+': u'+',      ';': u';',      'K': u'\u029e',
-    ',': u'\u2018', '<': u'>',      'L': u'\u2142',
-    '-': u'-',      '=': u'=',      'M': u'\u019c',
-    '.': u'\u02d9', '>': u'<',      'N': u'N',
-    '/': u'/',      '?': u'\u00bf', 'O': u'O',
+    ' ': ' ',      '0': '0',      '@': '@',
+    '!': '\u00a1', '1': '1',      'A': '\u2200',
+    '"': '\u201e', '2': '\u2681', 'B': 'q',
+    '#': '#',      '3': '\u0190', 'C': '\u0186',
+    '$': '$',      '4': '\u2683', 'D': '\u15e1',
+    '%': '%',      '5': '\u1515', 'E': '\u018e',
+    '&': '\u214b', '6': '9',      'F': '\u2132',
+    "'": '\u0375', '7': 'L',      'G': '\u2141',
+    '(': ')',      '8': '8',      'H': 'H',
+    ')': '(',      '9': '6',      'I': 'I',
+    '*': '*',      ':': ':',      'J': '\u148b',
+    '+': '+',      ';': ';',      'K': '\u029e',
+    ',': '\u2018', '<': '>',      'L': '\u2142',
+    '-': '-',      '=': '=',      'M': '\u019c',
+    '.': '\u02d9', '>': '<',      'N': 'N',
+    '/': '/',      '?': '\u00bf', 'O': 'O',
 
-    'P': u'd',      '`': u'\u02ce', 'p': u'd',
-    'Q': u'b',      'a': u'\u0250', 'q': u'b',
-    'R': u'\u1d1a', 'b': u'q',      'r': u'\u0279',
-    'S': u'S',      'c': u'\u0254', 's': u's',
-    'T': u'\u22a5', 'd': u'p',      't': u'\u0287',
-    'U': u'\u144e', 'e': u'\u01dd', 'u': u'n',
-    'V': u'\u039b', 'f': u'\u214e', 'v': u'\u028c',
-    'W': u'M',      'g': u'\u0253', 'w': u'\u028d',
-    'X': u'X',      'h': u'\u0265', 'x': u'x',
-    'Y': u'\u2144', 'i': u'\u1d09', 'y': u'\u028e',
-    'Z': u'Z',      'j': u'\u027f', 'z': u'z',
-    '[': u']',      'k': u'\u029e', '{': u'}',
-    '\\': u'\\',    'l': u'\u05df', '|': u'|',
-    ']': u'[',      'm': u'\u026f', '}': u'{',
-    '^': u'\u2335', 'n': u'u',      '~': u'~',
-    '_': u'\u203e', 'o': u'o',
+    'P': 'd',      '`': '\u02ce', 'p': 'd',
+    'Q': 'b',      'a': '\u0250', 'q': 'b',
+    'R': '\u1d1a', 'b': 'q',      'r': '\u0279',
+    'S': 'S',      'c': '\u0254', 's': 's',
+    'T': '\u22a5', 'd': 'p',      't': '\u0287',
+    'U': '\u144e', 'e': '\u01dd', 'u': 'n',
+    'V': '\u039b', 'f': '\u214e', 'v': '\u028c',
+    'W': 'M',      'g': '\u0253', 'w': '\u028d',
+    'X': 'X',      'h': '\u0265', 'x': 'x',
+    'Y': '\u2144', 'i': '\u1d09', 'y': '\u028e',
+    'Z': 'Z',      'j': '\u027f', 'z': 'z',
+    '[': ']',      'k': '\u029e', '{': '}',
+    '\\': '\\',    'l': '\u05df', '|': '|',
+    ']': '[',      'm': '\u026f', '}': '{',
+    '^': '\u2335', 'n': 'u',      '~': '~',
+    '_': '\u203e', 'o': 'o',
     }
 
     @internationalizeDocstring
@@ -711,7 +711,7 @@ class Filter(callbacks.Plugin):
             if c in self._uniudMap:
                 tmp = self._uniudMap[c]
                 if not len(tmp):
-                    tmp = u'\ufffd'
+                    tmp = '\ufffd'
                 turned.insert(0, tmp)
                 tlen += 1
             elif c == '\t':
@@ -721,7 +721,7 @@ class Filter(callbacks.Plugin):
             elif ord(c) >= 32:
                 turned.insert(0, c)
                 tlen += 1
-        s = '%s \x02 \x02' % ''.join(map(lambda x: x.encode('utf-8'), turned))
+        s = '%s \x02 \x02' % ''.join([x.encode('utf-8') for x in turned])
         irc.reply(s)
     uniud = wrap(uniud, ['text'])
 Filter = internationalizeDocstring(Filter)

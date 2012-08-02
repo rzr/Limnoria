@@ -118,7 +118,7 @@ class Owner(callbacks.Plugin):
         # This needs to be done before we connect to any networks so that the
         # children of supybot.plugins (the actual plugins) exist and can be
         # loaded.
-        for (name, s) in registry._cache.iteritems():
+        for (name, s) in registry._cache.items():
             if 'alwaysLoadDefault' in name or 'alwaysLoadImportant' in name:
                 continue
             if name.startswith('supybot.plugins'):
@@ -144,9 +144,9 @@ class Owner(callbacks.Plugin):
             for network in conf.supybot.networks():
                 try:
                     self._connect(network)
-                except socket.error, e:
+                except socket.error as e:
                     self.log.error('Could not connect to %s: %s.', network, e)
-                except Exception, e:
+                except Exception as e:
                     self.log.exception('Exception connecting to %s:', network)
                     self.log.error('Could not connect to %s: %s.', network, e)
 
@@ -171,8 +171,8 @@ class Owner(callbacks.Plugin):
             (server, port) = group.servers()[0]
         except (registry.NonExistentRegistryEntry, IndexError):
             if serverPort is None:
-                raise ValueError, 'connect requires a (server, port) ' \
-                                  'if the network is not registered.'
+                raise ValueError('connect requires a (server, port) ' \
+                                  'if the network is not registered.')
             conf.registerNetwork(network, password, ssl)
             serverS = '%s:%s' % serverPort
             conf.supybot.networks.get(network).servers.append(serverS)
@@ -211,21 +211,21 @@ class Owner(callbacks.Plugin):
                             m = plugin.loadPluginModule(name,
                                                         ignoreDeprecation=True)
                             plugin.loadPluginClass(irc, m)
-                        except callbacks.Error, e:
+                        except callbacks.Error as e:
                             # This is just an error message.
                             log.warning(str(e))
-                        except (plugins.NoSuitableDatabase, ImportError), e:
+                        except (plugins.NoSuitableDatabase, ImportError) as e:
                             s = 'Failed to load %s: %s' % (name, e)
                             if not s.endswith('.'):
                                 s += '.'
                             log.warning(s)
-                        except Exception, e:
+                        except Exception as e:
                             log.exception('Failed to load %s:', name)
                 else:
                     # Let's import the module so configuration is preserved.
                     try:
                         _ = plugin.loadPluginModule(name)
-                    except Exception, e:
+                    except Exception as e:
                         log.debug('Attempted to load %s to preserve its '
                                   'configuration, but load failed: %s',
                                   name, e)
@@ -266,7 +266,7 @@ class Owner(callbacks.Plugin):
             try:
                 tokens = callbacks.tokenize(s, channel=msg.args[0])
                 self.Proxy(irc, msg, tokens)
-            except SyntaxError, e:
+            except SyntaxError as e:
                 irc.queueMsg(callbacks.error(msg, str(e)))
 
     def logmark(self, irc, msg, args, text):
@@ -339,7 +339,7 @@ class Owner(callbacks.Plugin):
         """
         try:
             m = ircmsgs.IrcMsg(s)
-        except Exception, e:
+        except Exception as e:
             irc.error(utils.exnToString(e))
         else:
             irc.queueMsg(m)
@@ -434,7 +434,7 @@ class Owner(callbacks.Plugin):
             irc.error('%s is deprecated.  Use --deprecated '
                       'to force it to load.' % name.capitalize())
             return
-        except ImportError, e:
+        except ImportError as e:
             if str(e).endswith(' ' + name):
                 irc.error('No plugin named %s exists.' % utils.str.dqrepr(name))
             else:

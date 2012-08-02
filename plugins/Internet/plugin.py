@@ -80,7 +80,7 @@ class Internet(callbacks.Plugin):
             return
         try:
             t = telnetlib.Telnet('%s.whois-servers.net' % usertld, 43)
-        except socket.error, e:
+        except socket.error as e:
             irc.error(str(e))
             return
         t.write(domain)
@@ -118,7 +118,7 @@ class Internet(callbacks.Plugin):
             status = 'unknown'
         try:
             t = telnetlib.Telnet('whois.pir.org', 43)
-        except socket.error, e:
+        except socket.error as e:
             irc.error(str(e))
             return
         t.write('registrar ')
@@ -137,7 +137,7 @@ class Internet(callbacks.Plugin):
             elif line == 'Not a valid ID pattern':
                 url = ''
         if server and status:
-            info = filter(None, [status, created, updated, expires])
+            info = [_f for _f in [status, created, updated, expires] if _f]
             s = format(_('%s%s is %L.'), server, url, info)
             irc.reply(s)
         else:

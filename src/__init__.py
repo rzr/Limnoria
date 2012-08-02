@@ -30,7 +30,7 @@
 
 import sys
 import os.path
-import dynamicScope
+from . import dynamicScope
 
 try:
     import supybot.utils as utils

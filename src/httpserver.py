@@ -33,11 +33,11 @@ An embedded and centralized HTTP server for Supybot's plugins.
 
 import cgi
 from threading import Event, Thread
-from cStringIO import StringIO
-from SocketServer import ThreadingMixIn
-from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
+from io import StringIO
+from socketserver import ThreadingMixIn
+from http.server import HTTPServer, BaseHTTPRequestHandler
 # For testing purposes
-from SocketServer import StreamRequestHandler
+from socketserver import StreamRequestHandler
 
 import supybot.log as log
 import supybot.conf as conf
@@ -180,7 +180,7 @@ class SupyIndex(SupyHTTPServerCallback):
      </body>
     </html>"""
     def doGet(self, handler, path):
-        plugins = [x for x in handler.server.callbacks.items()]
+        plugins = [x for x in list(handler.server.callbacks.items())]
         if plugins == []:
             plugins = _('No plugins available.')
         else:

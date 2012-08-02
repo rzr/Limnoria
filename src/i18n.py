@@ -99,7 +99,7 @@ def getLocalePath(name, localeName, extension):
     if name != 'supybot':
         directory = getPluginDir(name) + 'locale'
     else:
-        import ansi # Any Supybot plugin could fit
+        from . import ansi # Any Supybot plugin could fit
         directory = ansi.__file__[0:-len('ansi.pyc')] + 'locale'
     return '%s/%s.%s' % (directory, localeName, extension)
 
@@ -127,7 +127,7 @@ def reloadLocales():
 i18nSupybot = None
 def PluginInternationalization(name='supybot'):
     # This is a proxy that prevents having several objects for the same plugin
-    if i18nClasses.has_key(name):
+    if name in i18nClasses:
         return i18nClasses[name]
     else:
         return _PluginInternationalization(name)
@@ -156,7 +156,7 @@ class _PluginInternationalization:
                 translationFile = open(getLocalePath(self.name,
                                                      localeName, 'po'), 'r')
             self._parse(translationFile)
-        except IOError, PluginNotFound: # The translation is unavailable
+        except IOError as PluginNotFound: # The translation is unavailable
             self.translations = {}
     def _parse(self, translationFile):
         """A .po files parser.
@@ -266,7 +266,7 @@ class _PluginInternationalization:
         if self.name != 'supybot':
             return
         try:
-            execfile(self._getL10nCodePath())
+            exec(compile(open(self._getL10nCodePath()).read(), self._getL10nCodePath(), 'exec'))
         except IOError: # File doesn't exist
             pass
 
@@ -291,7 +291,7 @@ class _PluginInternationalization:
         if self.name != 'supybot':
             return
         if hasattr(self, '_l10nFunctions') and \
-            self._l10nFunctions.has_key(name):
+            name in self._l10nFunctions:
             return self._l10nFunctions[name]
 
     def internationalizeFunction(self, name):
@@ -338,7 +338,7 @@ def internationalizeDocstring(obj):
     Only useful for commands (commands' docstring is displayed on IRC)"""
     if obj.__doc__ == None:
         return obj
-    if sys.modules[obj.__module__].__dict__.has_key('_'):
+    if '_' in sys.modules[obj.__module__].__dict__:
         internationalizedCommands.update({hash(obj): obj})
         try:
             obj.__doc__=sys.modules[obj.__module__]._.__call__(obj.__doc__)

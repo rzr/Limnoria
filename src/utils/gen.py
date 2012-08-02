@@ -38,20 +38,19 @@ import textwrap
 import UserDict
 import traceback
 
-from str import format
-from file import mktemp
-from iter import imap, all
+from .str import format
+from .file import mktemp
+from .iter import imap, all
 
-import crypt
+from . import crypt
 
 def abbrev(strings, d=None):
     """Returns a dictionary mapping unambiguous abbreviations to full forms."""
     def eachSubstring(s):
-        for i in xrange(1, len(s)+1):
+        for i in range(1, len(s)+1):
             yield s[:i]
     if len(strings) != len(set(strings)):
-        raise ValueError, \
-              'strings given to utils.abbrev have duplicates: %r' % strings
+        raise ValueError('strings given to utils.abbrev have duplicates: %r' % strings)
     if d is None:
         d = {}
     for s in strings:
@@ -113,7 +112,7 @@ def timeElapsed(elapsed, short=False, leadingZeroes=False, years=True,
             leadingZeroes = True
             Format('second', secs)
     if not ret:
-        raise ValueError, 'Time difference not great enough to be noted.'
+        raise ValueError('Time difference not great enough to be noted.')
     result = ''
     if short:
         result = ' '.join(ret)
@@ -155,17 +154,17 @@ def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
     without unsafely using eval()."""
     try:
         node = compiler.parse(s)
-    except SyntaxError, e:
-        raise ValueError, 'Invalid string: %s.' % e
+    except SyntaxError as e:
+        raise ValueError('Invalid string: %s.' % e)
     nodes = compiler.parse(s).node.nodes
     if not nodes:
         if node.__class__ is compiler.ast.Module:
             return node.doc
         else:
-            raise ValueError, format('Unsafe string: %q', s)
+            raise ValueError(format('Unsafe string: %q', s))
     node = nodes[0]
     if node.__class__ is not compiler.ast.Discard:
-        raise ValueError, format('Invalid expression: %q', s)
+        raise ValueError(format('Invalid expression: %q', s))
     node = node.getChildNodes()[0]
     def checkNode(node):
         if node.__class__ is compiler.ast.Const:
@@ -184,7 +183,7 @@ def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
     if checkNode(node):
         return eval(s, namespace, namespace)
     else:
-        raise ValueError, format('Unsafe string: %q', s)
+        raise ValueError(format('Unsafe string: %q', s))
 
 def exnToString(e):
     """Turns a simple exception instance into a string (better than str(e))"""
@@ -201,31 +200,31 @@ class IterableMap(object):
         raise NotImplementedError
 
     def iterkeys(self):
-        for (key, _) in self.iteritems():
+        for (key, _) in self.items():
             yield key
     __iter__ = iterkeys
 
     def itervalues(self):
-        for (_, value) in self.iteritems():
+        for (_, value) in self.items():
             yield value
 
     def items(self):
-        return list(self.iteritems())
+        return list(self.items())
 
     def keys(self):
-        return list(self.iterkeys())
+        return list(self.keys())
 
     def values(self):
-        return list(self.itervalues())
+        return list(self.values())
 
     def __len__(self):
         ret = 0
-        for _ in self.iteritems():
+        for _ in self.items():
             ret += 1
         return ret
 
-    def __nonzero__(self):
-        for _ in self.iteritems():
+    def __bool__(self):
+        for _ in self.items():
             return True
         return False
 
@@ -265,21 +264,21 @@ class InsensitivePreservingDict(UserDict.DictMixin, object):
         del self.data[self.key(k)]
 
     def iteritems(self):
-        return self.data.itervalues()
+        return iter(self.data.values())
 
     def keys(self):
         L = []
-        for (k, _) in self.iteritems():
+        for (k, _) in self.items():
             L.append(k)
         return L
 
     def __reduce__(self):
-        return (self.__class__, (dict(self.data.values()),))
+        return (self.__class__, (dict(list(self.data.values())),))
 
 
 class NormalizingSet(set):
     def __init__(self, iterable=()):
-        iterable = imap(self.normalize, iterable)
+        iterable = map(self.normalize, iterable)
         super(NormalizingSet, self).__init__(iterable)
 
     def normalize(self, x):
@@ -324,7 +323,7 @@ def callTracer(fd=None, basename=True):
             filename = code.co_filename
             if basename:
                 filename = os.path.basename(filename)
-            print >>fd, '%s: %s(%s)' % (filename, funcname, lineno)
+            print('%s: %s(%s)' % (filename, funcname, lineno), file=fd)
     return tracer
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

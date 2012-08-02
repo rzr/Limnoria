@@ -94,7 +94,7 @@ class StringTestCase(PluginTestCase):
             self.assertRegexp('chr %s' % i, regexp)
 
     def testOrd(self):
-        for c in map(chr, range(256)):
+        for c in map(chr, list(range(256))):
             i = ord(c)
             self.assertResponse('ord %s' % utils.str.dqrepr(c), str(i))
 

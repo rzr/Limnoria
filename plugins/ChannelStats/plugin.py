@@ -132,10 +132,10 @@ class StatsDB(plugins.ChannelUserDB):
         plugins.ChannelUserDB.__init__(self, *args, **kwargs)
 
     def serialize(self, v):
-        return v.values()
+        return list(v.values())
 
     def deserialize(self, channel, id, L):
-        L = map(int, L)
+        L = list(map(int, L))
         if id == 'channelStats':
             return ChannelStat(*L)
         else:
@@ -220,7 +220,7 @@ class ChannelStats(callbacks.Plugin):
             id = ircdb.users.getUserId(msg.prefix)
         except KeyError:
             id = None
-        for (channel, c) in self.laststate.channels.iteritems():
+        for (channel, c) in self.laststate.channels.items():
             if msg.nick in c.users:
                 if (channel, 'channelStats') not in self.db:
                     self.db[channel, 'channelStats'] = ChannelStat()
@@ -319,7 +319,7 @@ class ChannelStats(callbacks.Plugin):
             irc.error(_('You can\'t use lambda in this command.'), Raise=True)
         expr = expr.lower()
         users = []
-        for ((c, id), stats) in self.db.items():
+        for ((c, id), stats) in list(self.db.items()):
             if ircutils.strEqual(c, channel) and \
                (id == 0 or ircdb.users.hasUser(id)):
                 e = self._env.copy()
@@ -329,9 +329,9 @@ class ChannelStats(callbacks.Plugin):
                     v = eval(expr, e, e)
                 except ZeroDivisionError:
                     v = float('inf')
-                except NameError, e:
+                except NameError as e:
                     irc.errorInvalid(_('stat variable'), str(e).split()[1])
-                except Exception, e:
+                except Exception as e:
                     irc.error(utils.exnToString(e), Raise=True)
                 if id == 0:
                     users.append((v, irc.nick))

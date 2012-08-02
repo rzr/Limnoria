@@ -36,7 +36,7 @@ import os
 import sys
 import struct
 import os.path
-import cPickle as pickle
+import pickle as pickle
 
 import supybot.utils as utils
 
@@ -44,7 +44,7 @@ def hash(s):
     """DJB's hash function for CDB."""
     h = 5381
     for c in s:
-        h = ((h + (h << 5)) ^ ord(c)) & 0xFFFFFFFFL
+        h = ((h + (h << 5)) ^ ord(c)) & 0xFFFFFFFF
     return h
 
 def unpack2Ints(s):
@@ -57,7 +57,7 @@ def pack2Ints(i, j):
 
 def dump(map, fd=sys.stdout):
     """Dumps a dictionary-structure in CDB format."""
-    for (key, value) in map.iteritems():
+    for (key, value) in map.items():
         fd.write('+%s,%s:%s->%s\n' % (len(key), len(value), key, value))
 
 def open(filename, mode='r', **kwargs):
@@ -78,7 +78,7 @@ def open(filename, mode='r', **kwargs):
         maker.finish()
         return ReaderWriter(filename, **kwargs)
     else:
-        raise ValueError, 'Invalid flag: %s' % mode
+        raise ValueError('Invalid flag: %s' % mode)
 
 def shelf(filename, *args, **kwargs):
     """Opens a new shelf database object."""
@@ -135,7 +135,7 @@ class Maker(object):
         self.hashPointers = [(0, 0)] * 256
         #self.hashes = [[]] * 256 # Can't use this, [] stays the same...
         self.hashes = []
-        for _ in xrange(256):
+        for _ in range(256):
             self.hashes.append([])
 
     def add(self, key, data):
@@ -153,7 +153,7 @@ class Maker(object):
 
         Writes the remainder of the database to disk.
         """
-        for i in xrange(256):
+        for i in range(256):
             hash = self.hashes[i]
             self.hashPointers[i] = (self.fd.tell(), self._serializeHash(hash))
         self._serializeHashPointers()
@@ -252,7 +252,7 @@ class Reader(utils.IterableMap):
             try:
                 return self.default
             except AttributeError:
-                raise KeyError, key
+                raise KeyError(key)
 
     def findall(self, key):
         ret = []
@@ -331,7 +331,7 @@ class ReaderWriter(utils.IterableMap):
         if removals or adds:
             maker = Maker(self.filename)
             cdb = Reader(self.filename)
-            for (key, value) in cdb.iteritems():
+            for (key, value) in cdb.items():
                 if key in removals:
                     continue
                 elif key in adds:
@@ -341,7 +341,7 @@ class ReaderWriter(utils.IterableMap):
                         adds[key] = None
                 else:
                     maker.add(key, value)
-            for (key, value) in adds.iteritems():
+            for (key, value) in adds.items():
                 if value is not None:
                     maker.add(key, value)
             cdb.close()
@@ -372,7 +372,7 @@ class ReaderWriter(utils.IterableMap):
 
     def __getitem__(self, key):
         if key in self.removals:
-            raise KeyError, key
+            raise KeyError(key)
         else:
             try:
                 return self.adds[key]
@@ -381,7 +381,7 @@ class ReaderWriter(utils.IterableMap):
 
     def __delitem__(self, key):
         if key in self.removals:
-            raise KeyError, key
+            raise KeyError(key)
         else:
             if key in self.adds and key in self.cdb:
                 self._journalRemoveKey(key)
@@ -393,7 +393,7 @@ class ReaderWriter(utils.IterableMap):
             elif key in self.cdb:
                 self._journalRemoveKey(key)
             else:
-                raise KeyError, key
+                raise KeyError(key)
         self.mods += 1
         self._flushIfOverLimit()
 
@@ -415,7 +415,7 @@ class ReaderWriter(utils.IterableMap):
 
     def iteritems(self):
         already = set()
-        for (key, value) in self.cdb.iteritems():
+        for (key, value) in self.cdb.items():
             if key in self.removals or key in already:
                 continue
             elif key in self.adds:
@@ -423,7 +423,7 @@ class ReaderWriter(utils.IterableMap):
                 yield (key, self.adds[key])
             else:
                 yield (key, value)
-        for (key, value) in self.adds.iteritems():
+        for (key, value) in self.adds.items():
             if key not in already:
                 yield (key, value)
 

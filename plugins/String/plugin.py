@@ -90,7 +90,7 @@ class String(callbacks.Plugin):
             s = text.decode(encoding)
             # Not all encodings decode to a unicode object.  Only encode those
             # that do.
-            if isinstance(s, unicode):
+            if isinstance(s, str):
                 s = s.encode('utf-8')
             irc.reply(s)
         except LookupError:
@@ -157,7 +157,7 @@ class String(callbacks.Plugin):
             try:
                 v = commands.process(f, text, timeout=t, pn=self.name(), cn='re')
                 irc.reply(v)
-            except commands.ProcessTimeoutError, e:
+            except commands.ProcessTimeoutError as e:
                 irc.error("ProcessTimeoutError: %s" % (e,))
     re = thread(wrap(re, [first('regexpMatcher', 'regexpReplacer'),
                    'text']))
@@ -171,7 +171,7 @@ class String(callbacks.Plugin):
         encryption.
         """
         chars = utils.iter.cycle(password)
-        ret = [chr(ord(c) ^ ord(chars.next())) for c in text]
+        ret = [chr(ord(c) ^ ord(next(chars))) for c in text]
         irc.reply(''.join(ret))
     xor = wrap(xor, ['something', 'text'])
 

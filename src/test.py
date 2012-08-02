@@ -34,11 +34,11 @@ import re
 import sys
 import time
 import shutil
-import urllib
-import httplib
+import urllib.request, urllib.parse, urllib.error
+import http.client
 import unittest
 import threading
-import StringIO
+import io
 
 import supybot.log as log
 import supybot.i18n as i18n
@@ -94,7 +94,7 @@ class TestPlugin(callbacks.Plugin):
             irc.reply(repr(eval(' '.join(args))))
         except callbacks.ArgumentError:
             raise
-        except Exception, e:
+        except Exception as e:
             irc.reply(utils.exnToString(e))
 # Since we know we don't now need the Irc object, we just give None.  This
 # might break if callbacks.Privmsg ever *requires* the Irc object.
@@ -132,8 +132,8 @@ class PluginTestCase(SupyTestCase):
                 for cb in self.irc.callbacks:
                     cbModule = sys.modules[cb.__class__.__module__]
                     if hasattr(cbModule, 'deprecated') and cbModule.deprecated:
-                        print
-                        print 'Ignored, %s is deprecated.' % cb.name()
+                        print()
+                        print('Ignored, %s is deprecated.' % cb.name())
                         run = False
             if run:
                 originalRunTest()
@@ -172,7 +172,7 @@ class PluginTestCase(SupyTestCase):
         ircdb.ignores.reload()
         ircdb.channels.reload()
         if self.plugins is None:
-            raise ValueError, 'PluginTestCase must have a "plugins" attribute.'
+            raise ValueError('PluginTestCase must have a "plugins" attribute.')
         self.nick = nick
         self.prefix = ircutils.joinHostmask(nick, 'user', 'host.domain.tld')
         self.irc = getTestIrc()
@@ -191,7 +191,7 @@ class PluginTestCase(SupyTestCase):
                                                      ignoreDeprecation=True)
                     cb = plugin.loadPluginClass(self.irc, module)
         self.irc.addCallback(TestInstance)
-        for (name, value) in self.config.iteritems():
+        for (name, value) in self.config.items():
             group = conf.supybot
             parts = registry.split(name)
             if parts[0] == 'supybot':
@@ -205,7 +205,7 @@ class PluginTestCase(SupyTestCase):
         if self.__class__ in (PluginTestCase, ChannelPluginTestCase):
             # Necessary because there's a test in here that shouldn\'t run.
             return
-        for (group, original) in self.originals.iteritems():
+        for (group, original) in self.originals.items():
             group.setValue(original)
         ircdb.users.close()
         ircdb.ignores.close()
@@ -223,13 +223,13 @@ class PluginTestCase(SupyTestCase):
         if timeout is None:
             timeout = self.timeout
         if self.myVerbose:
-            print # Extra newline, so it's pretty.
+            print() # Extra newline, so it's pretty.
         prefixChars = conf.supybot.reply.whenAddressedBy.chars()
         if not usePrefixChar and query[0] in prefixChars:
             query = query[1:]
         msg = ircmsgs.privmsg(to, query, prefix=frm)
         if self.myVerbose:
-            print 'Feeding: %r' % msg
+            print('Feeding: %r' % msg)
         self.irc.feedMsg(msg)
         fed = time.time()
         response = self.irc.takeMsg()
@@ -238,7 +238,7 @@ class PluginTestCase(SupyTestCase):
             drivers.run()
             response = self.irc.takeMsg()
         if self.myVerbose:
-            print 'Response: %r' % response
+            print('Response: %r' % response)
         return response
 
     def getMsg(self, query, **kwargs):
@@ -259,7 +259,7 @@ class PluginTestCase(SupyTestCase):
     def assertError(self, query, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         if lastGetHelp not in m.args[1]:
             self.failUnless(m.args[1].startswith('Error:'),
                             '%r did not error: %s' % (query, m.args[1]))
@@ -271,7 +271,7 @@ class PluginTestCase(SupyTestCase):
     def assertNotError(self, query, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failIf(m.args[1].startswith('Error:'),
                     '%r errored: %s' % (query, m.args[1]))
         self.failIf(lastGetHelp in m.args[1],
@@ -284,7 +284,7 @@ class PluginTestCase(SupyTestCase):
     def assertHelp(self, query, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failUnless(lastGetHelp in m.args[1],
                         '%s is not the help (%s)' % (m.args[1], lastGetHelp))
         return m
@@ -301,7 +301,7 @@ class PluginTestCase(SupyTestCase):
     def assertResponse(self, query, expectedResponse, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.assertEqual(m.args[1], expectedResponse,
                          '%r != %r' % (expectedResponse, m.args[1]))
         return m
@@ -313,7 +313,7 @@ class PluginTestCase(SupyTestCase):
     def assertRegexp(self, query, regexp, flags=re.I, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failUnless(re.search(regexp, m.args[1], flags),
                         '%r does not match %r' % (m.args[1], regexp))
         return m
@@ -325,7 +325,7 @@ class PluginTestCase(SupyTestCase):
     def assertNotRegexp(self, query, regexp, flags=re.I, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failUnless(re.search(regexp, m.args[1], flags) is None,
                         '%r matched %r' % (m.args[1], regexp))
         return m
@@ -337,7 +337,7 @@ class PluginTestCase(SupyTestCase):
     def assertAction(self, query, expectedResponse=None, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failUnless(ircmsgs.isAction(m), '%r is not an action.' % m)
         if expectedResponse is not None:
             s = ircmsgs.unAction(m)
@@ -352,7 +352,7 @@ class PluginTestCase(SupyTestCase):
     def assertActionRegexp(self, query, regexp, flags=re.I, **kwargs):
         m = self._feedMsg(query, **kwargs)
         if m is None:
-            raise TimeoutError, query
+            raise TimeoutError(query)
         self.failUnless(ircmsgs.isAction(m))
         s = ircmsgs.unAction(m)
         self.failUnless(re.search(regexp, s, flags),
@@ -410,13 +410,13 @@ class ChannelPluginTestCase(PluginTestCase):
         if timeout is None:
             timeout = self.timeout
         if self.myVerbose:
-            print # Newline, just like PluginTestCase.
+            print() # Newline, just like PluginTestCase.
         prefixChars = conf.supybot.reply.whenAddressedBy.chars()
         if query[0] not in prefixChars and usePrefixChar:
             query = prefixChars[0] + query
         msg = ircmsgs.privmsg(to, query, prefix=frm)
         if self.myVerbose:
-            print 'Feeding: %r' % msg
+            print('Feeding: %r' % msg)
         self.irc.feedMsg(msg)
         fed = time.time()
         response = self.irc.takeMsg()
@@ -441,7 +441,7 @@ class ChannelPluginTestCase(PluginTestCase):
         else:
             ret = None
         if self.myVerbose:
-            print 'Returning: %r' % ret
+            print('Returning: %r' % ret)
         return ret
 
     def feedMsg(self, query, to=None, frm=None, private=False):
@@ -489,36 +489,36 @@ class TestRequestHandler(httpserver.SupyHTTPRequestHandler):
 # Partially stolen from the standart Python library :)
 def open_http(url, data=None):
     """Use HTTP protocol."""
-    import httplib
+    import http.client
     user_passwd = None
     proxy_passwd= None
     if isinstance(url, str):
-        host, selector = urllib.splithost(url)
+        host, selector = urllib.parse.splithost(url)
         if host:
-            user_passwd, host = urllib.splituser(host)
-            host = urllib.unquote(host)
+            user_passwd, host = urllib.parse.splituser(host)
+            host = urllib.parse.unquote(host)
         realhost = host
     else:
         host, selector = url
         # check whether the proxy contains authorization information
-        proxy_passwd, host = urllib.splituser(host)
+        proxy_passwd, host = urllib.parse.splituser(host)
         # now we proceed with the url we want to obtain
-        urltype, rest = urllib.splittype(selector)
+        urltype, rest = urllib.parse.splittype(selector)
         url = rest
         user_passwd = None
         if urltype.lower() != 'http':
             realhost = None
         else:
-            realhost, rest = urllib.splithost(rest)
+            realhost, rest = urllib.parse.splithost(rest)
             if realhost:
-                user_passwd, realhost = urllib.splituser(realhost)
+                user_passwd, realhost = urllib.parse.splituser(realhost)
             if user_passwd:
                 selector = "%s://%s%s" % (urltype, realhost, rest)
             if urllib.proxy_bypass(realhost):
                 host = realhost
 
         #print "proxy via http:", host, selector
-    if not host: raise IOError, ('http error', 'no host given')
+    if not host: raise IOError('http error', 'no host given')
 
     if proxy_passwd:
         import base64
@@ -541,15 +541,15 @@ def open_http(url, data=None):
     if proxy_auth: h.putheader('Proxy-Authorization', 'Basic %s' % proxy_auth)
     if auth: h.putheader('Authorization', 'Basic %s' % auth)
     if realhost: h.putheader('Host', realhost)
-    for args in urllib.URLopener().addheaders: h.putheader(*args)
+    for args in urllib.request.URLopener().addheaders: h.putheader(*args)
     h.endheaders()
     return h
 
-class FakeHTTPConnection(httplib.HTTPConnection):
+class FakeHTTPConnection(http.client.HTTPConnection):
     _data = ''
     _headers = {}
     def __init__(self, rfile, wfile):
-        httplib.HTTPConnection.__init__(self, 'localhost')
+        http.client.HTTPConnection.__init__(self, 'localhost')
         self.rfile = rfile
         self.wfile = wfile
         self.connect()
@@ -562,7 +562,7 @@ class FakeHTTPConnection(httplib.HTTPConnection):
     #def getresponse(self, *args, **kwargs):
     #    pass
 
-class HTTP(httplib.HTTP):
+class HTTP(http.client.HTTP):
     _connection_class = FakeHTTPConnection
 
 class HTTPPluginTestCase(PluginTestCase):
@@ -571,8 +571,8 @@ class HTTPPluginTestCase(PluginTestCase):
 
     def request(self, url, method='GET', read=True, data={}):
         assert url.startswith('/')
-        wfile = StringIO.StringIO()
-        rfile = StringIO.StringIO()
+        wfile = io.StringIO()
+        rfile = io.StringIO()
         connection = FakeHTTPConnection(wfile, rfile)
         connection.putrequest(method, url)
         connection.endheaders()

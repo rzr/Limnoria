@@ -30,12 +30,12 @@
 
 import re
 import socket
-import urllib
-import urllib2
-import httplib
+import urllib.request, urllib.parse, urllib.error
+import urllib.request, urllib.error, urllib.parse
+import http.client
 import sgmllib
-import urlparse
-import htmlentitydefs
+import urllib.parse
+import html.entities
 
 sockerrors = (socket.error,)
 try:
@@ -43,12 +43,12 @@ try:
 except AttributeError:
     pass
 
-from str import normalizeWhitespace
+from .str import normalizeWhitespace
 
-Request = urllib2.Request
-urlquote = urllib.quote
-urlunquote = urllib.unquote
-urlencode = urllib.urlencode
+Request = urllib.request.Request
+urlquote = urllib.parse.quote
+urlunquote = urllib.parse.unquote
+urlencode = urllib.parse.urlencode
 
 class Error(Exception):
     pass
@@ -104,31 +104,31 @@ def getUrlFd(url, headers=None, data=None):
     if headers is None:
         headers = defaultHeaders
     try:
-        if not isinstance(url, urllib2.Request):
+        if not isinstance(url, urllib.request.Request):
             if '#' in url:
                 url = url[:url.index('#')]
-            request = urllib2.Request(url, headers=headers, data=data)
+            request = urllib.request.Request(url, headers=headers, data=data)
         else:
             request = url
             request.add_data(data)
         httpProxy = force(proxy)
         if httpProxy:
             request.set_proxy(httpProxy, 'http')
-        fd = urllib2.urlopen(request)
+        fd = urllib.request.urlopen(request)
         return fd
-    except socket.timeout, e:
-        raise Error, TIMED_OUT
-    except sockerrors, e:
-        raise Error, strError(e)
-    except httplib.InvalidURL, e:
-        raise Error, 'Invalid URL: %s' % e
-    except urllib2.HTTPError, e:
-        raise Error, strError(e)
-    except urllib2.URLError, e:
-        raise Error, strError(e.reason)
+    except socket.timeout as e:
+        raise Error(TIMED_OUT)
+    except sockerrors as e:
+        raise Error(strError(e))
+    except http.client.InvalidURL as e:
+        raise Error('Invalid URL: %s' % e)
+    except urllib.error.HTTPError as e:
+        raise Error(strError(e))
+    except urllib.error.URLError as e:
+        raise Error(strError(e.reason))
     # Raised when urllib doesn't recognize the url type
-    except ValueError, e:
-        raise Error, strError(e)
+    except ValueError as e:
+        raise Error(strError(e))
 
 def getUrl(url, size=None, headers=None, data=None):
     """getUrl(url, size=None, headers=None, data=None)
@@ -142,17 +142,17 @@ def getUrl(url, size=None, headers=None, data=None):
             text = fd.read()
         else:
             text = fd.read(size)
-    except socket.timeout, e:
-        raise Error, TIMED_OUT
+    except socket.timeout as e:
+        raise Error(TIMED_OUT)
     fd.close()
     return text
 
 def getDomain(url):
-    return urlparse.urlparse(url)[1]
+    return urllib.parse.urlparse(url)[1]
 
 class HtmlToText(sgmllib.SGMLParser):
     """Taken from some eff-bot code on c.l.p."""
-    entitydefs = htmlentitydefs.entitydefs.copy()
+    entitydefs = html.entities.entitydefs.copy()
     entitydefs['nbsp'] = ' '
     def __init__(self, tagReplace=' '):
         self.data = []

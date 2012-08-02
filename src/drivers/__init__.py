@@ -102,7 +102,7 @@ def remove(name):
 
 def run():
     """Runs the whole driver loop."""
-    for (name, driver) in _drivers.iteritems():
+    for (name, driver) in _drivers.items():
         try:
             if name not in _deadDrivers:
                 driver.run()
@@ -157,7 +157,7 @@ class Log(object):
     def reconnect(self, network, when=None):
         s = 'Reconnecting to %s' % network
         if when is not None:
-            if not isinstance(when, basestring):
+            if not isinstance(when, str):
                 when = self.timestamp(when)
             s += ' at %s.' % when
         else:

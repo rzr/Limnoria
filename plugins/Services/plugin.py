@@ -31,7 +31,7 @@
 import re
 import time
 
-import config
+from . import config
 
 import supybot.conf as conf
 import supybot.utils as utils
@@ -316,7 +316,7 @@ class Services(callbacks.Plugin):
             # sorcery
             self.log.info('Received "Password accepted" from NickServ %s.', on)
             self.identified = True
-            for channel in irc.state.channels.keys():
+            for channel in list(irc.state.channels.keys()):
                 self.checkPrivileges(irc, channel)
             for channel in self.channels:
                 irc.queueMsg(networkGroup.channels.join(channel))
