@@ -56,7 +56,8 @@ version = None
 try:
     proc = subprocess.Popen('git show HEAD --format=%ci', shell=True,
             stdout=subprocess.PIPE)
-    version = proc.stdout.readline() \
+    version = proc.stdout.readline()\
+            .decode('utf8') \
             .strip() \
             .replace(' +', '+') \
             .replace(' ', 'T')
