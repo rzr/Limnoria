@@ -262,11 +262,10 @@ class Tokenizer(object):
     #
     # These are the characters valid in a token.  Everything printable except
     # double-quote, left-bracket, and right-bracket.
-    validChars=[x for x in utils.str.chars if x not in '\x00\r\n \t']
+    separators = '\x00\r\n \t'
     def __init__(self, brackets='', pipe=False, quotes='"'):
         if brackets:
-            self.validChars = ''.join([x for x in self.validChars
-                    if x not in brackets])
+            self.separators += brackets
             self.left = brackets[0]
             self.right = brackets[1]
         else:
@@ -274,9 +273,9 @@ class Tokenizer(object):
             self.right = ''
         self.pipe = pipe
         if self.pipe:
-            self.validChars = [x for x in self.validChars if x != '|']
+            self.separators += '|'
         self.quotes = quotes
-        self.validChars = [x for x in self.validChars if x not in quotes]
+        self.separators += quotes
 
 
     def _handleToken(self, token):
@@ -308,7 +307,7 @@ class Tokenizer(object):
         lexer = shlex.shlex(StringIO(s))
         lexer.commenters = ''
         lexer.quotes = self.quotes
-        lexer.wordchars = self.validChars
+        lexer.separators = self.separators
         args = []
         ends = []
         while True:
@@ -891,7 +890,7 @@ class NestedCommandsIrcProxy(ReplyIrcProxy):
                                   prefixNick=self.prefixNick)
                         self.irc.queueMsg(m)
                         return m
-                    msgs = ircutils.wrap(s, allowedLength)
+                    msgs = ircutils.wrap(s, allowedLength, break_long_words=True)
                     msgs.reverse()
                     instant = conf.get(conf.supybot.reply.mores.instant,target)
                     while instant > 1 and msgs:
@@ -1174,12 +1173,12 @@ class Commands(BasePlugin, metaclass=SynchronizedAndFirewalled):
             return self.getCommandMethod(command[1:])
         else:
             method = getattr(self, command[0])
-            if inspect.ismethod(method):
-                code = method.__func__.__code__
-                if inspect.getargs(code)[0] == self.commandArgs:
-                    return method
-                else:
-                    raise AttributeError
+            assert inspect.ismethod(method)
+            code = method.__func__.__code__
+            if inspect.getargs(code)[0] == self.commandArgs:
+                return method
+            else:
+                raise AttributeError
 
     def listCommands(self, pluginCommands=[]):
         commands = set(pluginCommands)

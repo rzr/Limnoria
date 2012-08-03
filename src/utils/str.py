@@ -58,16 +58,14 @@ def rsplit(s, sep=None, maxsplit=-1):
     else:
         return s.rsplit(sep, maxsplit)
 
-def normalizeWhitespace(s, removeNewline=True):
+def normalizeWhitespace(s, replaceNewline=True):
     """Normalizes the whitespace in a string; \s+ becomes one space."""
     replace_fn = lambda x, y, z: str.replace(x, y, z)
     if isinstance(s, str):
         replace_fn = lambda x, y, z: str.replace(x, y, z)
     else:
         s = str(s)
-    if removeNewline:
-        s = replace_fn(s, '\n', '')
-    else:
+    if replaceNewline:
         s = replace_fn(s, '\n', ' ')
     s = replace_fn(s, '\t', ' ')
     while '  ' in s:
@@ -222,8 +220,7 @@ def perlVariableSubstitute(vars, text):
 def multipleReplacer(dict_):
     """Return a function that replaces all dict keys by the associated
     value. More efficient than multiple .replace()."""
-    dict_ = {re.escape(key): val for key,val in dict_.items()}
-    matcher = re.compile('|'.join(dict_.keys()))
+    matcher = re.compile('|'.join([re.escape(x) for x in dict_.keys()]))
     return lambda x:matcher.sub(lambda m: dict_[m.group(0)], x)
 
 def multipleRemover(list_):

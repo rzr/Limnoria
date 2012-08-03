@@ -31,6 +31,7 @@
 import re
 import string
 import random
+import codecs
 from io import StringIO
 
 import supybot.conf as conf
@@ -110,7 +111,7 @@ class Filter(callbacks.Plugin):
         named 'hebrew' it's because I (jemfinch) thought of it in Hebrew class,
         and printed Hebrew often elides the vowels.)
         """
-        text = [c for c in text if c not in 'aeiou']
+        text = ''.join([c for c in text if c not in 'aeiou'])
         irc.reply(text)
     hebrew = wrap(hebrew, ['text'])
 
@@ -174,6 +175,8 @@ class Filter(callbacks.Plugin):
         irc.reply(''.join(L))
     unbinary = wrap(unbinary, ['text'])
 
+    _hex_encoder = staticmethod(codecs.getencoder('hex_codec'))
+    _hex_decoder = staticmethod(codecs.getdecoder('hex_codec'))
     @internationalizeDocstring
     def hexlify(self, irc, msg, args, text):
         """<text>
@@ -181,7 +184,7 @@ class Filter(callbacks.Plugin):
         Returns a hexstring from the given string; a hexstring is a string
         composed of the hexadecimal value of each character in the string
         """
-        irc.reply(text.encode('hex_codec'))
+        irc.reply(self._hex_encoder(text.encode('utf8'))[0].decode('utf8'))
     hexlify = wrap(hexlify, ['text'])
 
     @internationalizeDocstring
@@ -192,11 +195,12 @@ class Filter(callbacks.Plugin):
         <hexstring> must be a string of hexadecimal digits.
         """
         try:
-            irc.reply(text.decode('hex_codec'))
+            irc.reply(self._hex_decoder(text.encode('utf8'))[0].decode('utf8'))
         except TypeError:
             irc.error(_('Invalid input.'))
     unhexlify = wrap(unhexlify, ['text'])
 
+    _rot13_encoder = codecs.getencoder('rot-13')
     @internationalizeDocstring
     def rot13(self, irc, msg, args, text):
         """<text>
@@ -205,7 +209,7 @@ class Filter(callbacks.Plugin):
         commonly used for text that simply needs to be hidden from inadvertent
         reading by roaming eyes, since it's easily reversible.
         """
-        irc.reply(text.encode('rot13'))
+        irc.reply(self._rot13_encoder(text)[0])
     rot13 = wrap(rot13, ['text'])
 
     @internationalizeDocstring
@@ -232,7 +236,8 @@ class Filter(callbacks.Plugin):
         irc.reply(text)
     lithp = wrap(lithp, ['text'])
 
-    _leettrans = string.maketrans('oOaAeElBTiIts', '004433187!1+5')
+    _leettrans = staticmethod(utils.str.multipleReplacer(dict(
+        zip('oOaAeElBTiIts', '004433187!1+5'))))
     _leetres = [(re.compile(r'\b(?:(?:[yY][o0O][oO0uU])|u)\b'), 'j00'),
                 (re.compile(r'fear'), 'ph33r'),
                 (re.compile(r'[aA][tT][eE]'), '8'),
@@ -247,7 +252,7 @@ class Filter(callbacks.Plugin):
         """
         for (r, sub) in self._leetres:
             text = re.sub(r, sub, text)
-        text = text.translate(self._leettrans)
+        text = self._leettrans(text)
         irc.reply(text)
     leet = wrap(leet, ['text'])
 
@@ -648,14 +653,14 @@ class Filter(callbacks.Plugin):
         irc.reply(text)
     shrink = wrap(shrink, ['text'])
 
-    _azn_trans = string.maketrans('rlRL', 'lrLR')
+    _azn_trans = utils.str.multipleReplacer({'r':'l','l':'r','R':'L','L':'R'})
     @internationalizeDocstring
     def azn(self, irc, msg, args, text):
         """<text>
 
         Returns <text> with the l's made into r's and r's made into l's.
         """
-        text = text.translate(self._azn_trans)
+        text = self._azn_trans(text)
         irc.reply(text)
     azn = wrap(azn, ['text'])
 

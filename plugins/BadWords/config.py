@@ -64,7 +64,7 @@ conf.registerChannelValue(BadWords,'requireWordBoundaries',
 class String256(registry.String):
     def __call__(self):
         s = registry.String.__call__(self)
-        return s * (1024/len(s))
+        return s * (1024//len(s))
 
     def __str__(self):
         return self.value

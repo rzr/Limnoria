@@ -30,6 +30,7 @@
 
 import gc
 import os
+import imp
 import sys
 import time
 import socket
@@ -455,12 +456,13 @@ class Owner(callbacks.Plugin):
         callbacks = irc.removeCallback(name)
         if callbacks:
             module = sys.modules[callbacks[0].__module__]
-            if hasattr(module, 'reload'):
-                x = module.reload()
+            if hasattr(module, 'reload') and module.reload is not imp.reload:
+                module.reload()
             try:
                 module = plugin.loadPluginModule(name)
-                if hasattr(module, 'reload'):
-                    module.reload(x)
+                if hasattr(module, 'reload') and \
+                        module.reload is not imp.reload:
+                    module.reload()
                 for callback in callbacks:
                     callback.die()
                     del callback

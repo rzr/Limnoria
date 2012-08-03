@@ -29,12 +29,12 @@
 ###
 
 import os
+import io
 import json
 import shutil
 import urllib.request, urllib.parse, urllib.error
 import urllib.request, urllib.error, urllib.parse
 import tarfile
-from io import StringIO
 
 
 import supybot.log as log
@@ -79,7 +79,7 @@ class GithubRepository(GitRepository):
         args = dict([(x,y) for x,y in list(args.items()) if y is not None])
         url = '%s/%s/%s?%s' % (self._apiUrl, type_, uri_end,
                                urllib.parse.urlencode(args))
-        return json.load(utils.web.getUrlFd(url))
+        return json.loads(utils.web.getUrl(url).decode('utf8'))
 
     def getPluginList(self):
         plugins = self._query(
@@ -100,15 +100,12 @@ class GithubRepository(GitRepository):
         return plugins
 
     def _download(self, plugin):
-        try:
-            fileObject = urllib.request.urlopen(self._downloadUrl)
-            fileObject2 = StringIO()
-            fileObject2.write(fileObject.read())
-            fileObject.close()
-            fileObject2.seek(0)
-            return tarfile.open(fileobj=fileObject2, mode='r:gz')
-        finally:
-            del fileObject
+        with utils.web.getUrlFd(self._downloadUrl) as response:
+            assert response.status == 200, response.status
+            fileObject = io.BytesIO()
+            fileObject.write(response.read())
+        fileObject.seek(0)
+        return tarfile.open(fileobj=fileObject, mode='r:gz')
     def install(self, plugin):
         archive = self._download(plugin)
         prefix = archive.getnames()[0]
@@ -132,7 +129,7 @@ class GithubRepository(GitRepository):
                     if extractedFile is None:
                         os.mkdir(newFileName)
                     else:
-                        open(newFileName, 'a').write(extractedFile.read())
+                        open(newFileName, 'ab').write(extractedFile.read())
         finally:
             archive.close()
             del archive

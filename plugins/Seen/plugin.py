@@ -66,6 +66,12 @@ class SeenDB(plugins.ChannelUserDB):
         self[channel, nickOrId] = (seen, saying)
         self[channel, '<last>'] = (seen, saying)
 
+    def __iter__(self):
+        return super(SeenDB, self).__iter__()
+
+    def __len__(self):
+        return super(SeenDB, self).__len__()
+
     def seenWildcard(self, channel, nick):
         nicks = ircutils.IrcSet()
         nickRe = re.compile('^%s$' % '.*'.join(nick.split('*')), re.I)

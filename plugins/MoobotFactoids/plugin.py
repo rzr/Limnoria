@@ -44,9 +44,9 @@ import supybot.callbacks as callbacks
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('MoobotFactoids')
 
-allchars = string.maketrans('', '')
+allchars = bytes.maketrans(b'', b'')
 class OptionList(object):
-    validChars = allchars.translate(allchars, '|()')
+    validChars = allchars.translate(allchars, b'|()').decode('utf8', 'replace')
     def _insideParens(self, lexer):
         ret = []
         while True:
@@ -599,11 +599,12 @@ class MoobotFactoids(callbacks.Plugin):
         results = self.db.mostRecent(channel, limit)
         L = [format('%q', t[0]) for t in results]
         if L:
-            if len(L) < 2:
+            n = len(L)
+            if n < 2:
                 latest = _('latest factoid')
             else:
                 latest = _('latest factoids')
-            irc.reply(format(_('%s: %L'), latest, L))
+            irc.reply(format(_('%i %s: %L'), n, latest, L))
         else:
             irc.error(_('There are no factoids in my database.'))
 
@@ -611,11 +612,12 @@ class MoobotFactoids(callbacks.Plugin):
         results = self.db.mostPopular(channel, limit)
         L = [format('%q (%s)', t[0], t[1]) for t in results]
         if L:
-            if len(L) < 2:
+            n = len(L)
+            if n < 2:
                 requested = _('requested factoid')
             else:
                 requested = _('requested factoids')
-            irc.reply(format(_('Top %s: %L'), requested, L))
+            irc.reply(format(_('Top %i %s: %L'), n, requested, L))
         else:
             irc.error(_('No factoids have been requested from my database.'))
 

@@ -29,9 +29,7 @@
 
 from supybot.test import *
 
-import supybot.plugin as plugin
-
-Alias = plugin.loadPluginModule('Alias')
+from . import plugin as Alias
 
 class FunctionsTest(SupyTestCase):
     def testFindBiggestDollar(self):

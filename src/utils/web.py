@@ -157,7 +157,7 @@ class HtmlToText(html.parser.HTMLParser):
     def __init__(self, tagReplace=' '):
         self.data = []
         self.tagReplace = tagReplace
-        sgmllib.SGMLParser.__init__(self)
+        super(HtmlToText, self).__init__(self)
 
     def handle_starttag(self, tag, attr):
         self.data.append(self.tagReplace)

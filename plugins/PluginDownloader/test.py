@@ -79,6 +79,8 @@ class PluginDownloaderTestCase(PluginTestCase):
         self.assertNotError('plugindownloader install stepnem Freenode')
         self._testPluginInstalled('Freenode')
 
+    #too big, 18MB
+    """
     def testInstallGsf(self):
         self.assertNotError('plugindownloader install gsf-snapshot Debian')
         self._testPluginInstalled('Debian')
@@ -94,6 +96,7 @@ class PluginDownloaderTestCase(PluginTestCase):
         self._testPluginInstalled('Acronym')
         self.assertError('plugindownloader install gsf Anagram')
         self.assertError('plugindownloader install gsf Debian')
+    """
 
     def testInstallNanotubeBitcoin(self):
         self.assertNotError('plugindownloader install nanotube-bitcoin GPG')
@@ -107,6 +110,5 @@ class PluginDownloaderTestCase(PluginTestCase):
     def testInstallSpiderDave(self):
         self.assertNotError('plugindownloader install SpiderDave Pastebin')
         self._testPluginInstalled('Pastebin')
-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

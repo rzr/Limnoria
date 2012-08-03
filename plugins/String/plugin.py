@@ -28,7 +28,10 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
+import zlib
 import types
+import base64
+import codecs
 import binascii
 
 import supybot.utils as utils
@@ -71,11 +74,21 @@ class String(callbacks.Plugin):
         Returns an encoded form of the given text; the valid encodings are
         available in the documentation of the Python codecs module:
         <http://docs.python.org/library/codecs.html#standard-encodings>.
+
+        Extra format allowed: base64 and zlib.
         """
-        try:
-            irc.reply(text.encode(encoding).rstrip('\n'))
-        except LookupError:
-            irc.errorInvalid(_('encoding'), encoding)
+        if encoding == 'base64':
+            irc.reply(base64.encodebytes(text).decode('utf8'))
+        elif encoding == 'zlib':
+            text = zlib.compress(text.encode('utf8')) # Compress
+            text = base64.encodebytes(text).decode('utf8') # Make it readable
+            irc.reply(text.rstrip('\n'))
+        else:
+            try:
+                encoder = codecs.getencoder(encoding)
+                irc.reply(encoder(text).decode('utf8').rstrip('\n'))
+            except LookupError:
+                irc.errorInvalid(_('encoding'), encoding)
     encode = wrap(encode, ['something', 'text'])
 
     @internationalizeDocstring
@@ -85,20 +98,26 @@ class String(callbacks.Plugin):
         Returns an un-encoded form of the given text; the valid encodings are
         available in the documentation of the Python codecs module:
         <http://docs.python.org/library/codecs.html#standard-encodings>.
+
+        Extra format allowed: base64 and zlib.
         """
-        try:
-            s = text.decode(encoding)
-            # Not all encodings decode to a unicode object.  Only encode those
-            # that do.
-            if isinstance(s, str):
-                s = s.encode('utf-8')
-            irc.reply(s)
-        except LookupError:
-            irc.errorInvalid(_('encoding'), encoding)
-        except binascii.Error:
-            irc.errorInvalid(_('base64 string'),
+        if encoding == 'base64':
+            try:
+                irc.reply(base64.decodebytes(text.encode('utf8')).decode('utf8'))
+            except binascii.Error:
+                irc.errorInvalid(_('base64 string'),
                              s=_('Base64 strings must be a multiple of 4 in '
                                'length, padded with \'=\' if necessary.'))
+        elif encoding == 'zlib':
+            text = base64.decodebytes(text.encode('utf8')) # Get real string
+            text = zlib.decompress(text) # Decompress
+            irc.reply(text.decode('utf8'))
+        else:
+            try:
+                decoder = codecs.getencoder(encoding)
+                irc.reply(s.decode('utf8').rstrip('\n'))
+            except LookupError:
+                irc.errorInvalid(_('encoding'), encoding)
     decode = wrap(decode, ['something', 'text'])
 
     @internationalizeDocstring

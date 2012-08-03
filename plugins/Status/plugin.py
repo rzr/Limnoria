@@ -153,7 +153,7 @@ class Status(callbacks.Plugin):
                     cmd = 'ps -o rss -p %s' % pid
                     try:
                         inst = subprocess.Popen(cmd.split(), close_fds=True,
-                                                stdin=file(os.devnull),
+                                                stdin=open(os.devnull),
                                                 stdout=subprocess.PIPE,
                                                 stderr=subprocess.PIPE)
                     except OSError:
@@ -165,7 +165,7 @@ class Status(callbacks.Plugin):
                     mem = int(os.stat('/proc/%s/mem' % pid)[7])
                 response += format(_('  I\'m taking up %S of memory.'),
                         mem*1024)
-            except Exception:
+            except Exception as e:
                 self.log.exception('Uncaught exception in cpu.memory:')
         irc.reply(utils.str.normalizeWhitespace(response))
     cpu = wrap(cpu)

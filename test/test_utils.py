@@ -363,8 +363,8 @@ class StrTest(SupyTestCase):
     def testNormalizeWhitespace(self):
         f = utils.str.normalizeWhitespace
         self.assertEqual(f('foo   bar'), 'foo bar')
-        self.assertEqual(f('foo\nbar', removeNewline=True), 'foobar')
-        self.assertEqual(f('foo\nbar', removeNewline=False), 'foo bar')
+        self.assertEqual(f('foo\nbar', replaceNewline=True), 'foo bar')
+        self.assertEqual(f('foo\nbar', replaceNewline=False), 'foo\nbar')
         self.assertEqual(f('foo\tbar'), 'foo bar')
 
     def testNItems(self):

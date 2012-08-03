@@ -50,7 +50,7 @@ class WebTestCase(ChannelPluginTestCase):
 
         def testTitle(self):
             self.assertResponse('title http://www.slashdot.org/',
-                                'Slashdot - News for nerds, stuff that matters')
+                                'Slashdot: News for nerds, stuff that matters')
             # Amazon add a bunch of scripting stuff to the top of their page,
             # so we need to allow for a larger peekSize
 # Actually, screw Amazon. Even bumping this up to 10k doesn't give us enough
@@ -65,12 +65,14 @@ class WebTestCase(ChannelPluginTestCase):
 #                             'no HTML title')
 #            finally:
 #                conf.supybot.protocols.http.peekSize.setValue(orig)
+
+# 404 not found
             # Checks the non-greediness of the regexp
-            self.assertResponse('title '
-                                'http://www.space.com/scienceastronomy/'
-                                'jupiter_dark_spot_031023.html',
-                                'SPACE.com -- Mystery Spot on Jupiter Baffles '
-                                'Astronomers')
+#            self.assertResponse('title '
+#                                'http://www.space.com/scienceastronomy/'
+#                                'jupiter_dark_spot_031023.html',
+#                                'SPACE.com -- Mystery Spot on Jupiter Baffles '
+#                                'Astronomers')
             # Checks for @title not-working correctly
             self.assertResponse('title '
                 'http://www.catb.org/~esr/jargon/html/F/foo.html',
@@ -85,9 +87,6 @@ class WebTestCase(ChannelPluginTestCase):
             # part of it.
             self.assertRegexp('title http://www.n-e-r-d.com/', 'N.*E.*R.*D')
             # Checks that the parser doesn't hang on invalid tags
-            print()
-            print("If we have not fixed a bug with the parser, the following", end=' ')
-            print("test will hang the test-suite.")
             self.assertNotError(
                         'title http://www.youtube.com/watch?v=x4BtiqPN4u8')
 
@@ -97,9 +96,9 @@ class WebTestCase(ChannelPluginTestCase):
         def testTitleSnarfer(self):
             try:
                 conf.supybot.plugins.Web.titleSnarfer.setValue(True)
-                self.assertSnarfResponse('http://microsoft.com/',
-                                         'Title: Microsoft Corporation'
-                                         ' (at microsoft.com)')
+                self.assertSnarfResponse('https://github.com/',
+                                         'Title: GitHub · Social Coding '
+                                         '(at github.com)')
             finally:
                 conf.supybot.plugins.Web.titleSnarfer.setValue(False)
 

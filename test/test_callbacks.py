@@ -150,6 +150,9 @@ class TokenizerTestCase(SupyTestCase):
         s = s[:-1] + '\x0f'
         self.assertEqual(tokenize(s), [s])
 
+    def testUnicode(self):
+        self.assertEqual(tokenize('АБВГДЕЖ'), ['АБВГДЕЖ'])
+
 
 class FunctionsTestCase(SupyTestCase):
     def testCanonicalName(self):
@@ -387,6 +390,7 @@ class PrivmsgTestCase(ChannelPluginTestCase):
             self.failUnless(ircutils.isChannel(m.args[0]))
             conf.supybot.reply.error.inPrivate.set('True')
             m = self.getMsg(s)
+            print(repr(m.args))
             self.failIf(ircutils.isChannel(m.args[0]))
         finally:
             conf.supybot.reply.error.inPrivate.set(original)

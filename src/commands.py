@@ -606,6 +606,9 @@ def getNow(irc, msg, args, state):
     state.args.append(int(time.time()))
 
 def getCommandName(irc, msg, args, state):
+    # FIXME: On the one hand, we should accept commands with space in them
+    # (for example "capability add"), but on the other hand, canonicalName()
+    # strips spaces.
     if ' ' in args[0]:
         state.errorInvalid(_('command name'), args[0])
     else:

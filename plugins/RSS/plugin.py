@@ -28,10 +28,8 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-import new
 import time
 import socket
-import sgmllib
 import threading
 
 import supybot.conf as conf
@@ -260,7 +258,7 @@ class RSS(callbacks.Plugin):
                     results = feedparser.parse(url)
                     if 'bozo_exception' in results:
                         raise results['bozo_exception']
-                except sgmllib.SGMLParseError:
+                except feedparser.sgmllib.SGMLParseError:
                     self.log.exception('Uncaught exception from feedparser:')
                     raise callbacks.Error('Invalid (unparsable) RSS feed.')
                 except socket.timeout:
@@ -348,7 +346,7 @@ class RSS(callbacks.Plugin):
             args.insert(0, url)
             self.rss(irc, msg, args)
         f = utils.python.changeFunctionName(f, name, docstring)
-        f = new.instancemethod(f, self, RSS)
+        setattr(self, name, f)
         self.feedNames[name] = (url, f)
         self._registerFeed(name, url)
 

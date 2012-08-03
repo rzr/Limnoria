@@ -249,7 +249,16 @@ class ChannelUserDictionary(collections.MutableMapping):
         (channel, id) = xxx_todo_changeme2
         del self.channels[channel][id]
 
-    def iteritems(self):
+    def __iter__(self):
+        for channel, ids in self.channels.items():
+            for id_, value in ids.items():
+                yield (channel, id_)
+        raise StopIteration()
+
+    def __len__(self):
+        return sum([len(x) for x in self.channels])
+
+    def items(self):
         for (channel, ids) in self.channels.items():
             for (id, v) in ids.items():
                 yield ((channel, id), v)
@@ -270,7 +279,7 @@ class ChannelUserDB(ChannelUserDictionary):
         ChannelUserDictionary.__init__(self)
         self.filename = filename
         try:
-            fd = file(self.filename)
+            fd = open(self.filename)
         except EnvironmentError as e:
             log.warning('Couldn\'t open %s: %s.', self.filename, e)
             return
@@ -302,12 +311,12 @@ class ChannelUserDB(ChannelUserDictionary):
         fd = utils.file.AtomicFile(self.filename, makeBackupIfSmaller=False)
         writer = csv.writer(fd)
         items = list(self.items())
+        # FIXME: Order items.
         if not items:
             log.debug('%s: Refusing to write blank file.',
                       self.__class__.__name__)
             fd.rollback()
             return
-        items.sort()
         for ((channel, id), v) in items:
             L = self.serialize(v)
             L.insert(0, id)
@@ -567,7 +576,7 @@ class PeriodicFileDownloader(object):
                 return
             confDir = conf.supybot.directories.data()
             newFilename = os.path.join(confDir, utils.file.mktemp())
-            outfd = file(newFilename, 'wb')
+            outfd = open(newFilename, 'wb')
             start = time.time()
             s = infd.read(4096)
             while s:

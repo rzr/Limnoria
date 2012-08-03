@@ -32,12 +32,13 @@ from supybot.test import *
 #import supybot.plugin as plugin
 import supybot.ircutils as ircutils
 
+from . import plugin
+
 try:
     import sqlite
 except ImportError:
     sqlite = None
 
-MF = plugin.loadPluginModule('MoobotFactoids')
 MFconf = conf.supybot.plugins.MoobotFactoids
 
 class OptionListTestCase(SupyTestCase):
@@ -47,7 +48,7 @@ class OptionListTestCase(SupyTestCase):
         original = L[:]
         while max and L:
             max -= 1
-            option = MF.plugin.pickOptions(s)
+            option = plugin.pickOptions(s)
             self.failUnless(option in original,
                             'Option %s not in %s' % (option, original))
             if option in L:
@@ -223,7 +224,7 @@ class FactoidsTestCase(ChannelPluginTestCase):
         self.assertRegexp('most authored',
                             'Most prolific authors:.*moo.*(1).*boo.*(1)')
         self.assertRegexp('most recent',
-                            "2 latest factoids:.*mogle.*moogle.*")
+                            "2 latest factoids:.*moogle.*mogle.*")
         self.assertResponse('moogle', 'moo')
         self.assertRegexp('most popular',
                             "Top 1 requested factoid:.*moogle.*(2)")
