@@ -44,7 +44,7 @@ if not os.path.exists('test-conf'):
     os.mkdir('test-conf')
 
 registryFilename = os.path.join('test-conf', 'test.conf')
-fd = file(registryFilename, 'w')
+fd = open(registryFilename, 'w')
 fd.write("""
 supybot.directories.data: test-data
 supybot.directories.conf: test-conf
@@ -190,6 +190,7 @@ if __name__ == '__main__':
             sys.stderr.write('Failed to load plugin %s: %s\n' % (pluginName,e))
             sys.stderr.write('(pluginDirs: %s)\n' %
                              conf.supybot.directories.plugins())
+            raise e
             continue
         if hasattr(pluginModule, 'test'):
             test.suites.append(load(pluginModule.test))

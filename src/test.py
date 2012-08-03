@@ -58,7 +58,7 @@ import supybot.httpserver as httpserver
 i18n.import_conf()
 network = True
 
-# This is the global list of suites that are to be run.
+# This is the global list of suites thaPy_TPFLAGS_UNICODE_SUBCLASSt are to be run.
 suites = []
 
 timeout = 10
@@ -561,9 +561,6 @@ class FakeHTTPConnection(http.client.HTTPConnection):
     #    self.sock = self.wfile
     #def getresponse(self, *args, **kwargs):
     #    pass
-
-class HTTP(http.client.HTTP):
-    _connection_class = FakeHTTPConnection
 
 class HTTPPluginTestCase(PluginTestCase):
     def setUp(self):

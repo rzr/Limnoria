@@ -39,7 +39,6 @@ import collections
 
 from .str import format
 from .file import mktemp
-from .iter import all
 
 from . import crypt
 
@@ -167,17 +166,20 @@ def safeEval(s, namespace={'True': True, 'False': False, 'None': None}):
     #node = node.getChildNodes()[0]
     def checkNode(node):
         if node.__class__ is ast.Expr:
+            real_node = node
             node = node.value
         if node.__class__ in (ast.Num,
                               ast.Str,
                               ast.Bytes):
             return True
-        if node.__class__ in (ast.List,
-                              ast.Tuple,
-                              ast.Dict):
-            return all(checkNode, node.getChildNodes())
-        if node.__class__ is ast.Name:
-            if node.name in namespace:
+        elif node.__class__ in (ast.List,
+                              ast.Tuple):
+            return all([checkNode(x) for x in node.elts])
+        elif node.__class__ is ast.Dict:
+            return all([checkNode(x) for x in node.keys]) and \
+                all([checkNode(x) for x in node.values])
+        elif node.__class__ is ast.Name:
+            if node.id in namespace:
                 return True
             else:
                 return False

@@ -121,11 +121,11 @@ class RingBuffer(object):
         if self.full:
             oidx = idx
             if type(oidx) == slice:
-                range = range(*slice.indices(oidx, len(self)))
-                if len(range) != len(elt):
+                range_ = range(*slice.indices(oidx, len(self)))
+                if len(range_) != len(elt):
                     raise ValueError('seq must be the same length as slice.')
                 else:
-                    for (i, x) in zip(range, elt):
+                    for (i, x) in zip(range_, elt):
                         self[i] = x
             else:
                 (m, idx) = divmod(oidx, len(self.L))
@@ -135,11 +135,11 @@ class RingBuffer(object):
                 self.L[idx] = elt
         else:
             if type(idx) == slice:
-                range = range(*slice.indices(idx, len(self)))
-                if len(range) != len(elt):
+                range_ = range(*slice.indices(idx, len(self)))
+                if len(range_) != len(elt):
                     raise ValueError('seq must be the same length as slice.')
                 else:
-                    for (i, x) in zip(range, elt):
+                    for (i, x) in zip(range_, elt):
                         self[i] = x
             else:
                 self.L[idx] = elt

@@ -477,13 +477,14 @@ def replyTo(msg):
 
 def dccIP(ip):
     """Converts an IP string to the DCC integer form."""
+    # FIXME: Handle IPv6?
     assert utils.net.isIPV4(ip), \
            'argument must be a string ip in xxx.yyy.zzz.www format.'
     i = 0
     x = 256**3
     for quad in ip.split('.'):
         i += int(quad)*x
-        x /= 256
+        x //= 256
     return i
 
 def unDccIP(i):
@@ -492,9 +493,9 @@ def unDccIP(i):
     L = []
     while len(L) < 4:
         L.append(i % 256)
-        i /= 256
+        i //= 256
     L.reverse()
-    return '.'.join(utils.iter.imap(str, L))
+    return '.'.join(map(str, L))
 
 class IrcString(str):
     """This class does case-insensitive comparison and hashing of nicks."""

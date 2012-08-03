@@ -274,7 +274,7 @@ class Tokenizer(object):
             self.right = ''
         self.pipe = pipe
         if self.pipe:
-            self.validChars = ''.join([x for x in self.validChars if x != '|'])
+            self.validChars = [x for x in self.validChars if x != '|']
         self.quotes = quotes
         self.validChars = [x for x in self.validChars if x not in quotes]
 
@@ -282,7 +282,7 @@ class Tokenizer(object):
     def _handleToken(self, token):
         if token[0] == token[-1] and token[0] in self.quotes:
             token = token[1:-1]
-            token = token.decode('string_escape')
+            token = token.encode('utf8').decode('unicode_escape')
         return token
 
     def _insideBrackets(self, lexer):

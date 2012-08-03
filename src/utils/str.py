@@ -45,8 +45,7 @@ from supybot.i18n import PluginInternationalization
 import collections
 internationalizeFunction=PluginInternationalization().internationalizeFunction
 
-from types import MethodType as curry
-chars = ('abcdfeghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_')
+chars = bytes.maketrans(b'', b'').decode('ascii', 'replace')
 
 def rsplit(s, sep=None, maxsplit=-1):
     """Equivalent to str.split, except splitting from the right."""
@@ -68,6 +67,8 @@ def normalizeWhitespace(s, removeNewline=True):
         s = str(s)
     if removeNewline:
         s = replace_fn(s, '\n', '')
+    else:
+        s = replace_fn(s, '\n', ' ')
     s = replace_fn(s, '\t', ' ')
     while '  ' in s:
         s = replace_fn(s, '  ', ' ')
@@ -98,13 +99,12 @@ def distance(s, t):
 
 _soundextrans = str.maketrans(string.ascii_uppercase,
                                  '01230120022455012623010202')
-_notUpper = string.ascii_uppercase.translate(chars)
 def soundex(s, length=4):
     """Returns the soundex hash of a given string."""
     s = s.upper() # Make everything uppercase.
-    s = s.translate(chars, _notUpper) # Delete non-letters.
+    s = ''.join([x for x in s if x in string.ascii_uppercase]) # Delete non-letters.
     if not s:
-        raise ValueError('Invalid string for soundex: %s')
+        raise ValueError('Invalid string for soundex: %r' % s)
     firstChar = s[0] # Save the first character.
     s = s.translate(_soundextrans) # Convert to soundex numbers.
     s = s.lstrip(s[0]) # Remove all repeated first characters.
@@ -120,7 +120,7 @@ def dqrepr(s):
     """Returns a repr() of s guaranteed to be in double quotes."""
     # The wankers-that-be decided not to use double-quotes anymore in 2.3.
     # return '"' + repr("'\x00" + s)[6:]
-    return '"%s"' % s.encode('string_escape').replace('"', '\\"')
+    return '"%s"' % s.encode('unicode_escape').decode('utf8').replace('"', '\\"')
 
 def quoted(s):
     """Returns a quoted s."""
@@ -193,9 +193,11 @@ def perlReToReplacer(s):
     if 'g' in flags:
         g = True
         flags = list(filter('g'.__ne__, flags))
+    if isinstance(flags, list):
+        flags = ''.join(flags)
     r = perlReToPythonRe(sep.join(('', regexp, flags)))
     if g:
-        curry(r.sub, replace)
+        return lambda s: r.sub(replace, s)
     else:
         return lambda s: r.sub(replace, s, 1)
 

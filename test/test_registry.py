@@ -58,6 +58,7 @@ class FunctionsTestCase(SupyTestCase):
         self.assertEqual(['foo'], split('foo'))
         self.assertEqual(['foo', 'bar'], split('foo.bar'))
         self.assertEqual(['foo.bar'], split('foo\\.bar'))
+        self.assertEqual(['foo\\.bar'], split(r'foo\\\.bar'))
 
     def testJoin(self):
         self.assertEqual('foo', join(['foo']))
@@ -171,7 +172,7 @@ class ValuesTestCase(SupyTestCase):
         conf.supybot.reply.whenAddressedBy.chars.set('\\')
         filename = conf.supybot.directories.conf.dirize('backslashes.conf')
         registry.close(conf.supybot, filename)
-        registry.open(filename)
+        registry.open_registry(filename)
         self.assertEqual(conf.supybot.reply.whenAddressedBy.chars(), '\\')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

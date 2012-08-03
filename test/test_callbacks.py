@@ -96,11 +96,11 @@ class TokenizerTestCase(SupyTestCase):
     def testPipe(self):
         try:
             conf.supybot.commands.nested.pipeSyntax.setValue(True)
+            self.assertEqual(tokenize('foo | bar'), ['bar', ['foo']])
+            self.assertEqual(tokenize('foo|bar'), ['bar', ['foo']])
             self.assertRaises(SyntaxError, tokenize, '| foo')
             self.assertRaises(SyntaxError, tokenize, 'foo ||bar')
             self.assertRaises(SyntaxError, tokenize, 'bar |')
-            self.assertEqual(tokenize('foo|bar'), ['bar', ['foo']])
-            self.assertEqual(tokenize('foo | bar'), ['bar', ['foo']])
             self.assertEqual(tokenize('foo | bar | baz'),
                              ['baz', ['bar',['foo']]])
             self.assertEqual(tokenize('foo bar | baz'),

@@ -104,7 +104,8 @@ def nonCommentLines(fd):
             yield line
 
 def nonEmptyLines(fd):
-    return filter(lambda x:(x not in ('\n', '\'\n')), fd)
+    # FIXME: Remove != "'" without breaking registry load.
+    return filter(lambda x:(x.strip() not in ('', "\'")), fd)
 
 def nonCommentNonEmptyLines(fd):
     return nonEmptyLines(nonCommentLines(fd))

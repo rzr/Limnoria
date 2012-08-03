@@ -68,7 +68,7 @@ def open_registry(filename, clear=False):
     global _lastModified
     if clear:
         _cache.clear()
-    _fd = open(filename, encoding='unicode_escape')
+    _fd = open(filename)
     fd = utils.file.nonCommentNonEmptyLines(_fd)
     acc = ''
     slashEnd = re.compile(r'\\*$')
@@ -88,11 +88,10 @@ def open_registry(filename, clear=False):
         else:
             acc += line
         try:
-            #print(repr(acc))
             (key, value) = re.split(r'(?<!\\):', acc, 1)
             key = key.strip()
             value = value[1:]
-            #value = codecs.getdecoder('unicode_escape')(value)[0]
+            value = codecs.getdecoder('unicode_escape')(value)[0]
             acc = ''
         except ValueError:
             raise InvalidRegistryFile('Error unpacking line %r' % acc)
@@ -129,14 +128,7 @@ def close(registry, filename, private=True):
             lines.append('###\n')
             #fd.writelines(lines)
             for line in lines:
-                try:
-                    fd.write(''.join([str(x) for x in line]))
-                except Exception as e:
-                    print(dir(fd))
-                    print(repr(line))
-                    print(repr(type(line)))
-                    print(repr(line.__class__))
-                    raise e
+                fd.write(''.join([str(x) for x in line]))
         if hasattr(value, 'value'): # This lets us print help for non-values.
             try:
                 if private or not value._private:
@@ -156,7 +148,7 @@ def isValidRegistryName(name):
     return len(name.split()) == 1 and not name.startswith('_')
 
 def escape(name):
-    name = str(codecs.getencoder('unicode_escape')(name)[0])
+    name = codecs.getencoder('unicode_escape')(name)[0].decode('utf8')
     name = name.replace(':', '\\:')
     name = name.replace('.', '\\.')
     return name
@@ -164,7 +156,7 @@ def escape(name):
 def unescape(name):
     name = name.replace('\\.', '.')
     name = name.replace('\\:', ':')
-    name = codecs.getdecoder('unicode_escape')(name)[0]
+    name = codecs.getdecoder('unicode_escape')(name.encode('utf8'))[0]
     return name
 
 _splitRe = re.compile(r'(?<!\\)\.')
@@ -172,7 +164,7 @@ def split(name):
     return list(map(unescape, _splitRe.split(name)))
 
 def join(names):
-    return '.'.join(names)
+    return '.'.join(map(escape, names))
 
 class Group(object):
     """A group; it doesn't hold a value unless handled by a subclass."""
@@ -375,7 +367,7 @@ class Value(Group):
         return repr(self())
 
     def serialize(self):
-        return str(self)
+        return codecs.getencoder('unicode_escape')(str(self))[0].decode('utf8')
 
     # We tried many, *many* different syntactic methods here, and this one was
     # simply the best -- not very intrusive, easily overridden by subclasses,
