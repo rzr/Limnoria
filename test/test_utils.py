@@ -71,7 +71,7 @@ class GenTest(SupyTestCase):
         ipd = utils.InsensitivePreservingDict
         d = ipd(dict(Foo=10))
         self.failUnless(d['foo'] == 10)
-        self.assertEqual(list(d.keys()), ['Foo'])
+        self.assertEqual(list(d.keys()), ['foo'])
         self.assertEqual(d.get('foo'), 10)
         self.assertEqual(d.get('Foo'), 10)
 
@@ -100,7 +100,9 @@ class GenTest(SupyTestCase):
                   '1.0', '[1,2,3]', 'True', 'False', 'None',
                   '(True,False,None)', '"foo"', '{"foo": "bar"}']:
             self.assertEqual(eval(s), utils.safeEval(s))
-        for s in ['lambda: 2', 'import foo', 'foo.bar']:
+        for s in ['lambda: 2', 'import foo', 'foo.bar', '[__import__("foo")]',
+                '{__import__("foo"): "bar"}', '{"foo": __import__("bar")}',
+                '("foo", __import__("bar"))']:
             self.assertRaises(ValueError, utils.safeEval, s)
 
     def testSafeEvalTurnsSyntaxErrorIntoValueError(self):
@@ -355,7 +357,8 @@ class StrTest(SupyTestCase):
     def testNormalizeWhitespace(self):
         f = utils.str.normalizeWhitespace
         self.assertEqual(f('foo   bar'), 'foo bar')
-        self.assertEqual(f('foo\nbar'), 'foo bar')
+        self.assertEqual(f('foo\nbar', removeNewline=True), 'foobar')
+        self.assertEqual(f('foo\nbar', removeNewline=False), 'foo bar')
         self.assertEqual(f('foo\tbar'), 'foo bar')
 
     def testNItems(self):
