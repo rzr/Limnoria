@@ -224,7 +224,7 @@ class FactoidsTestCase(ChannelPluginTestCase):
         self.assertRegexp('most authored',
                             'Most prolific authors:.*moo.*(1).*boo.*(1)')
         self.assertRegexp('most recent',
-                            "2 latest factoids:.*moogle.*mogle.*")
+                            "2 latest factoids:.*mogle.*moogle.*")
         self.assertResponse('moogle', 'moo')
         self.assertRegexp('most popular',
                             "Top 1 requested factoid:.*moogle.*(2)")

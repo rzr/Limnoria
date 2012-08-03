@@ -48,7 +48,9 @@ from .str import normalizeWhitespace
 Request = urllib.request.Request
 urlquote = urllib.parse.quote
 urlunquote = urllib.parse.unquote
-urlencode = urllib.parse.urlencode
+
+def urlencode(data):
+    return urllib.parse.urlencode(data).encode('utf8')
 
 class Error(Exception):
     pass
@@ -135,7 +137,8 @@ def getUrl(url, size=None, headers=None, data=None):
 
     Gets a page.  Returns a string that is the page gotten.  Size is an integer
     number of bytes to read from the URL.  Headers and data are dicts as per
-    urllib2.Request's arguments."""
+    urllib2.Request's arguments.
+    It returns a bytes object, as data may be a binary file."""
     fd = getUrlFd(url, headers=headers, data=data)
     try:
         if size is None:
@@ -175,6 +178,8 @@ class HtmlToText(html.parser.HTMLParser):
 def htmlToText(s, tagReplace=' '):
     """Turns HTML into text.  tagReplace is a string to replace HTML tags with.
     """
+    if isinstance(s, bytes):
+        s = s.decode('utf8')
     x = HtmlToText(tagReplace)
     x.feed(s)
     return x.getText()

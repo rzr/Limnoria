@@ -131,11 +131,10 @@ class Google(callbacks.PluginRegexp):
         if 'rsz' not in opts:
             opts['rsz'] = 'large'
 
-        fd = utils.web.getUrlFd('%s?%s' % (self._gsearchUrl,
+        text = utils.web.getUrl('%s?%s' % (self._gsearchUrl,
                                            urllib.parse.urlencode(opts)),
-                                headers)
-        json = simplejson.load(fd)
-        fd.close()
+                                headers=headers)
+        json = simplejson.loads(text.decode('utf8'))
         if json['responseStatus'] != 200:
             raise callbacks.Error(_('We broke The Google!'))
         return json
@@ -147,9 +146,8 @@ class Google(callbacks.PluginRegexp):
         if max:
             data = data[:max]
         for result in data:
-            title = utils.web.htmlToText(result['titleNoFormatting']\
-                                         .encode('utf-8'))
-            url = result['unescapedUrl'].encode('utf-8')
+            title = utils.web.htmlToText(result['titleNoFormatting'])
+            url = result['unescapedUrl']
             if title:
                 if bold:
                     title = ircutils.bold(title)
@@ -287,7 +285,7 @@ class Google(callbacks.PluginRegexp):
         Uses Google's calculator to calculate the value of <expression>.
         """
         urlig = self._googleUrlIG(expr)
-        js = utils.web.getUrl(urlig)
+        js = utils.web.getUrl(urlig).decode('utf8')
         # fix bad google json
         js = js \
                 .replace('lhs:','"lhs":') \
@@ -303,7 +301,7 @@ class Google(callbacks.PluginRegexp):
             return
 
         url = self._googleUrl(expr)
-        html = utils.web.getUrl(url)
+        html = utils.web.getUrl(url).decode('utf8')
         match = self._calcRe1.search(html)
         if match is None:
             match = self._calcRe2.search(html)
@@ -327,7 +325,7 @@ class Google(callbacks.PluginRegexp):
         Looks <phone number> up on Google.
         """
         url = self._googleUrl(phonenumber)
-        html = utils.web.getUrl(url)
+        html = utils.web.getUrl(url).decode('utf8')
         m = self._phoneRe.search(html)
         if m is not None:
             s = m.group(1)

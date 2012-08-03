@@ -49,7 +49,7 @@ def hash(s):
 
 def unpack2Ints(s):
     """Returns two ints unpacked from the binary string s."""
-    return struct.unpack('<LL', s)
+    return struct.unpack('<LL', s.encode('ascii'))
 
 def pack2Ints(i, j):
     """Returns a packed binary string from the two ints."""
@@ -60,7 +60,7 @@ def dump(map, fd=sys.stdout):
     for (key, value) in map.items():
         fd.write('+%s,%s:%s->%s\n' % (len(key), len(value), key, value))
 
-def open(filename, mode='r', **kwargs):
+def open_db(filename, mode='r', **kwargs):
     """Opens a database; used for compatibility with other database modules."""
     if mode == 'r':
         return Reader(filename, **kwargs)
@@ -114,7 +114,7 @@ def make(dbFilename, readFilename=None):
     if readFilename is None:
         readfd = sys.stdin
     else:
-        readfd = file(readFilename, 'r')
+        readfd = open(readFilename, 'r')
     maker = Maker(dbFilename)
     while 1:
         (initchar, key, value) = _readKeyValue(readfd)
@@ -143,7 +143,8 @@ class Maker(object):
         h = hash(key)
         hashPointer = h % 256
         startPosition = self.fd.tell()
-        self.fd.write(pack2Ints(len(key), len(data)))
+        self.fd.write(pack2Ints(len(key), len(data)).decode('ascii',
+            errors='replace'))
         self.fd.write(key)
         self.fd.write(data)
         self.hashes[hashPointer].append((h, startPosition))
@@ -164,25 +165,26 @@ class Maker(object):
         hashLen = len(hash) * 2
         a = [(0, 0)] * hashLen
         for (h, pos) in hash:
-            i = (h / 256) % hashLen
+            i = (h // 256) % hashLen
             while a[i] != (0, 0):
                 i = (i + 1) % hashLen
             a[i] = (h, pos)
         for (h, pos) in a:
-            self.fd.write(pack2Ints(h, pos))
+            self.fd.write(pack2Ints(h, pos).decode('ascii', errors='replace'))
         return hashLen
 
     def _serializeHashPointers(self):
         self.fd.seek(0)
         for (hashPos, hashLen) in self.hashPointers:
-            self.fd.write(pack2Ints(hashPos, hashLen))
+            self.fd.write(pack2Ints(hashPos, hashLen).decode('ascii',
+                errors='replace'))
 
 
 class Reader(utils.IterableMap):
     """Class for reading from a CDB database."""
     def __init__(self, filename):
         self.filename = filename
-        self.fd = file(filename, 'r')
+        self.fd = open(filename, 'r')
         self.loop = 0
         self.khash = 0
         self.kpos = 0
@@ -203,7 +205,7 @@ class Reader(utils.IterableMap):
 
     def iteritems(self):
         # uses loop/hslots in a strange, non-re-entrant manner.
-        (self.loop,) = struct.unpack('<i', self._read(4, 0))
+        (self.loop,) = struct.unpack('<i', self._read(4, 0).encode('ascii'))
         self.hslots = 2048
         while self.hslots < self.loop:
             (klen, dlen) = unpack2Ints(self._read(8, self.hslots))
@@ -267,9 +269,9 @@ class Reader(utils.IterableMap):
             return default
 
     def __len__(self):
-        (start,) = struct.unpack('<i', self._read(4, 0))
+        (start,) = struct.unpack('<i', self._read(4, 0).encode('ascii'))
         self.fd.seek(0, 2)
-        return ((self.fd.tell() - start) / 16)
+        return ((self.fd.tell() - start) // 16)
 
     has_key = _find
     __contains__ = has_key
@@ -292,7 +294,7 @@ class ReaderWriter(utils.IterableMap):
 
     def _openFiles(self):
         self.cdb = Reader(self.filename)
-        self.journal = file(self.journalName, 'w')
+        self.journal = open(self.journalName, 'w')
 
     def _closeFiles(self):
         self.cdb.close()
@@ -312,7 +314,7 @@ class ReaderWriter(utils.IterableMap):
         removals = set()
         adds = {}
         try:
-            fd = file(self.journalName, 'r')
+            fd = open(self.journalName, 'r')
             while 1:
                 (initchar, key, value) = _readKeyValue(fd)
                 if initchar is None:
@@ -366,7 +368,7 @@ class ReaderWriter(utils.IterableMap):
                     self.mods = 0
             elif isinstance(self.maxmods, float):
                 assert 0 <= self.maxmods
-                if self.mods / max(len(self.cdb), 100) > self.maxmods:
+                if self.mods // max(len(self.cdb), 100) > self.maxmods:
                     self.flush()
                     self.mods = 0
 
@@ -457,7 +459,7 @@ class Shelf(ReaderWriter):
 if __name__ == '__main__':
     if sys.argv[0] == 'cdbdump':
         if len(sys.argv) == 2:
-            fd = file(sys.argv[1], 'r')
+            fd = open(sys.argv[1], 'r')
         else:
             fd = sys.stdin
         db = Reader(fd)

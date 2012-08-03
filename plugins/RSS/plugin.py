@@ -43,7 +43,9 @@ from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('RSS')
 
 try:
-    feedparser = utils.python.universalImport('feedparser', 'local.feedparser')
+    feedparser=utils.python.universalImport('feedparser.feedparser',
+            'local.feedparser.feedparser', 'feedparser',
+            'local.feedparser')
 except ImportError:
     raise callbacks.Error('You the feedparser module installed to use this plugin.  ' \
             'Download the module at <http://feedparser.org/>.')
@@ -267,6 +269,7 @@ class RSS(callbacks.Plugin):
                     # These seem mostly harmless.  We'll need reports of a
                     # kind that isn't.
                     self.log.debug('Allowing bozo_exception %r through.', e)
+                    raise e
                 if results.get('feed', {}):
                     self.cachedFeeds[url] = results
                     self.lastRequest[url] = time.time()

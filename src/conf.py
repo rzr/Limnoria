@@ -901,7 +901,7 @@ class CDB(registry.Boolean):
         import supybot.cdb as cdb
         basename = os.path.basename(filename)
         journalName = supybot.directories.data.tmp.dirize(basename+'.journal')
-        return cdb.open(filename, 'c',
+        return cdb.open_db(filename, 'c',
                         journalName=journalName,
                         maxmods=self.maximumModifications())
 

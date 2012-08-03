@@ -134,7 +134,8 @@ class ShrinkUrl(callbacks.PluginRegexp):
             if len(url) >= minlen:
                 try:
                     shorturl = getattr(self, '_get%sUrl' % cmd)(url)
-                except (utils.web.Error, AttributeError, ShrinkError):
+                except (utils.web.Error, AttributeError, ShrinkError) as e:
+                    raise e
                     self.log.info('Couldn\'t get shorturl for %u', url)
                     return
                 if self.registryValue('shrinkSnarfer.showDomain', channel):
@@ -159,9 +160,9 @@ class ShrinkUrl(callbacks.PluginRegexp):
             text = utils.web.getUrl('http://ln-s.net/home/api.jsp?url=' + url)
             (code, text) = text.split(None, 1)
             text = text.strip()
-            if code == '200':
+            if code == b'200':
                 self.db.set('ln', url, text)
-                return text
+                return text.decode('utf8')
             else:
                 raise ShrinkError(text)
 
@@ -184,7 +185,8 @@ class ShrinkUrl(callbacks.PluginRegexp):
         try:
             return self.db.get('tiny', url)
         except KeyError:
-            text = utils.web.getUrl('http://tinyurl.com/api-create.php?url=' + url)
+            text=utils.web.getUrl('http://tinyurl.com/api-create.php?url='+url) \
+                .decode('utf8')
             if text.startswith('Error'):
                 raise ShrinkError(text[5:])
             self.db.set('tiny', url, text)
@@ -212,7 +214,7 @@ class ShrinkUrl(callbacks.PluginRegexp):
             return self.db.get('xrl', quotedurl)
         except KeyError:
             data = utils.web.urlencode({'long_url': url})
-            text = utils.web.getUrl(self._xrlApi, data=data)
+            text = utils.web.getUrl(self._xrlApi, data=data).decode('utf8')
             if text.startswith('ERROR:'):
                 raise ShrinkError(text[6:])
             self.db.set('xrl', quotedurl, text)
@@ -239,10 +241,11 @@ class ShrinkUrl(callbacks.PluginRegexp):
         try:
             return self.db.get('goo', url)
         except KeyError:
+            data = json.dumps({'longUrl': url}).encode()
             text = utils.web.getUrl(self._gooApi,
                     headers={'content-type':'application/json'},
-                    data=json.dumps({'longUrl': url}))[1]
-            googl = json.loads(text)['id']
+                    data=data)
+            googl = json.loads(text.decode())['id']
             if len(googl) > 0 :
                 self.db.set('goo', url, googl)
                 return googl
@@ -268,7 +271,7 @@ class ShrinkUrl(callbacks.PluginRegexp):
         try:
             return self.db.get('x0', url)
         except KeyError:
-            text = utils.web.getUrl(self._x0Api % url)
+            text = utils.web.getUrl(self._x0Api % url).decode('utf8')
             if text.startswith('ERROR:'):
                 raise ShrinkError(text[6:])
             self.db.set('x0', url, text)

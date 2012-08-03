@@ -167,6 +167,15 @@ class AtomicFile:
     def write(self, s):
         return self._fd.write(s)
 
+    def seek(self, *args, **kwargs):
+        return self._fd.seek(*args, **kwargs)
+
+    def tell(self, *args, **kwargs):
+        return self._fd.tell(*args, **kwargs)
+
+    def flush(self, *args, **kwargs):
+        return self._fd.flush(*args, **kwargs)
+
     @property
     def closed(self):
         return self._fd.closed

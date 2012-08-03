@@ -295,7 +295,8 @@ class Misc(callbacks.Plugin):
                     'commits/%s'
             versions = {}
             for branch in ('master', 'testing'):
-                data = json.loads(utils.web.getUrl(newestUrl % branch))
+                data = json.loads(utils.web.getUrl(newestUrl % branch)
+                        .decode('utf8'))
                 version = data['commit']['committer']['date']
                 # Strip the last ':':
                 version = ''.join(version.rsplit(':', 1))
