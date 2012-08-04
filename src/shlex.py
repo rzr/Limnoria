@@ -19,8 +19,7 @@ class shlex:
             self.instream = sys.stdin
             self.infile = None
         self.commenters = '#'
-        self.separators = ('abcdfeghijklmnopqrstuvwxyz'
-                          'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_')
+        self.separators = (' \t\r\n\'"')
         self.whitespace = ' \t\r\n'
         self.quotes = '\'"'
         self.state = ' '
